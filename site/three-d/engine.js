@@ -418,7 +418,15 @@ function pushHighRigEquipment(world){
  // Mode-dependent long-gun pivot, recoil and magazine animation.
  const firingPose=(shotPoseTimer>0||wave8Pose==="shoot");
  const recoil=firingPose?(wave8Pose==="shoot"?.09:(WM.recoil(gun,aiming,Math.max(0,shotSequence-1)).kickMeters*Math.min(1,flash/.11))):0;
- const magMotion=WM.magazine(reloadProgress,reload>0||wave8Pose==="reload");
+ const magazineSource=WM.magazine(reloadProgress,reload>0||wave8Pose==="reload");
+ // Wave20 actual Chrome reload found 17.6cm left-hand error while the
+ // detached magazine traveled 27cm down/15cm out, past the skinned arm's reach.
+ // Keep the real release/swap/insert timing but use a compact reachable path
+ // for the authentic German rig until a licensed animated MP40 replaces this
+ // provisional primitive magazine. The visible magazine and IK goal share it.
+ const magMotion=highRig?.period&&gun.id==="mp40"&&reload>0?
+  {...magazineSource,drop:magazineSource.drop*(.08/.27),side:magazineSource.side*(.045/.15)}:
+  magazineSource;
  const magazineDrop=magMotion.drop;
  const clip=player.hp<=0?"death":reload>0?"reload":shotPoseTimer>0?"shoot":keys.control||keys.c?"crouch":playerMoveSpeed>3?"run":playerMoveSpeed>.12?"walk":"idle";
  const selectedClip=["idle","walk","run","shoot","reload","crouch","death"].includes(wave8Pose)?wave8Pose:clip;

@@ -317,7 +317,12 @@ function create(gl,options={}){
   let error=Infinity,n=0;
   // CCD local quaternion IK: rotate forearm and upperarm to keep hand_l on
   // the real 3D weapon foregrip while preserving 52-bone UAL animation.
-  for(;n<12;n++){
+  // Wave20 multi-frame Chrome measurement: old .02m tolerance left average
+  // 1.0–1.5cm foregrip error. Budget 16 bounded CCD iterations targeting 5mm
+  // (character uses scale=.02, so solver thresholds are in author rig units).
+  const toleranceMeters=period?.005:.02;
+  const maxIterations=period?16:12;
+  for(;n<maxIterations;n++){
    for(const id of [elbow,shoulder,clavicle]){
     const cache=new Map(),pivot=point(id,cache),end=point(hand,cache),
      current=norm3(sub(end,pivot)),desired=norm3(sub(goal,pivot)),
@@ -333,9 +338,10 @@ function create(gl,options={}){
     leftIK.set(id,qmul(leftIK.get(id)||[0,0,0,1],qAround(localAxis,theta)));
    }
    error=Math.hypot(...sub(point(hand,new Map()),goal));
-   if(error<.02/modelScale)break;
+   if(error<toleranceMeters/modelScale)break;
   }
-  lastIK={enabled:true,error:error*modelScale,initial:initial*modelScale,iterations:n+1,shoulderDistance:Math.hypot(...sub(goal,shoulderPos))*modelScale};
+  lastIK={enabled:true,error:error*modelScale,initial:initial*modelScale,iterations:n+1,
+   toleranceMeters,shoulderDistance:Math.hypot(...sub(goal,shoulderPos))*modelScale};
   return lastIK;
  }
  function pose(phase,clip,allowCache=false){
