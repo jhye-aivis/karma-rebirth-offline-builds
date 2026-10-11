@@ -139,20 +139,30 @@ const shadowOrtho=new Float32Array([1/spreadShadow,0,0,0,0,1/spreadShadow,0,0,0,
 const lightVP=multiplyMat4(shadowOrtho,lookAt([42,58,36],[0,0,0]));
 const skinned=root.KarmaSkinned.create(gl);
 let highRig=null,legacyRig=null,germanRig=null;
+const qualityChoice=new URLSearchParams(location.search).get("quality");
+const wave18Quality=["original","balanced","fast","legacy"].includes(qualityChoice)?qualityChoice:"fast";
+let wave18AutoLod=0;
+root.KarmaWave18Perf={quality:wave18Quality,autoLod:0,fullBytes:43578032,lodBytes:11607272,source:"author's licensed CC0 Panzergrenadier",frames:0,actorRenderMs:0,realBots:0};
 try{highRig=root.KarmaHighRig?.create(gl)||null;}catch(error){console.warn("CC0 glTF renderer not available; retain CPU-rig fallback",error);}
 legacyRig=highRig;
 // Official creator CC0 64-joint Panzergrenadier, loaded from a real GLB when
 // served over localhost/Pages. Legacy Quaternius is retained as 100% offline fallback.
 root.KarmaWave17Model={state:"loading",author:"Britdawgmasterfunk",source:"https://blendswap.com/blend/31342",replaced:false};
-if(location.protocol!=="file:"){
- fetch("assets/characters/panzergrenadier_cc0.glb").then(res=>{
+if(location.protocol!=="file:"&&wave18Quality!=="legacy"){
+ const isFull=wave18Quality==="original";
+ const loadStart=performance.now();
+ fetch("assets/characters/"+(isFull?"panzergrenadier_cc0.glb":"panzergrenadier_cc0_optimized.glb")).then(res=>{
   if(!res.ok)throw Error("GLB HTTP "+res.status);
   return res.arrayBuffer();
  }).then(raw=>{
+  const decodeStart=performance.now();
   const result=root.KarmaHighRig.create(gl,{raw});
   if(!result.period||result.joints!==64||result.ualBones!==52)throw Error("Artist GLB rig validation failed");
   germanRig=result;
   if((player.team||teamPicker.value)==="german")highRig=result;
+  root.KarmaWave18Perf.loadMs=performance.now()-loadStart;
+  root.KarmaWave18Perf.decodeMs=performance.now()-decodeStart;
+  root.KarmaWave18Perf.downloadedBytes=raw.byteLength;
   root.KarmaWave17Model={state:"loaded",replaced:true,source:result.source,joints:result.joints,
    mappedUAL:result.ualBones,triangles:result.triangles,materials:5,
    get loadedTextures(){return result.artistMaterialsReady();}};
@@ -253,6 +263,7 @@ const PROTOTYPE_WEAPONS={
 };
 let gun=PROTOTYPE_WEAPONS.german,ammo=32,spare=160,reload=0,reloadTotal=0,fireCooldown=0,firing=false,aiming=false,kills=0,time=180,flash=0,shotPoseTimer=0,last=performance.now(),worldBuffer=0,sceneVertices=0,shotSequence=0;
 let lastKillEvent=null,impactFX=[],shotMarkers=[];
+const diagnostics=root.KarmaDiagnostics={shots:0,hits:0,blocked:0,damage:0,mode:"client-local-only"};
 const audio=root.KarmaAudio;let sensitivity=2.4,walkCadence=0,previousPlayerHP=100;
 const Camera=root.KarmaCamera,cameraButton=document.querySelector("#camera-mode");
 const mouseLockStatus=document.querySelector("#mouse-lock-status");
@@ -311,7 +322,8 @@ const stats=document.querySelector("#stats"),top=document.querySelector("#missio
 const miniCtx=mini.getContext("2d");
 const scoreGerman=document.querySelector("#score-german"),scoreSoviet=document.querySelector("#score-soviet"),clock=document.querySelector("#match-clock");
 const healthFill=document.querySelector("#health-fill"),healthValue=document.querySelector("#health-value"),gunName=document.querySelector("#gun-name"),hudClip=document.querySelector("#hud-clip"),hudReserve=document.querySelector("#hud-reserve");
-const benchEnabled=new URLSearchParams(window.location.search).get("benchmark")==="1";
+const benchRequested=new URLSearchParams(window.location.search).get("benchmark")==="1";
+const benchEnabled=true; // Collect lightweight frame diagnostics even when HUD is closed.
 const skinCheck=new URLSearchParams(window.location.search).get("skinCheck")==="1";
 // Wave7: Chrome confirmed GPU skin buffer corruption fixed by binding static world VBO
 // before uploading geometry. GPU-driven low-poly NPCs are now the default; choose
@@ -319,7 +331,7 @@ const skinCheck=new URLSearchParams(window.location.search).get("skinCheck")==="
 const skinDisabled=new URLSearchParams(window.location.search).get("gpuSkin")==="0";
 const runBrowserSelftest=new URLSearchParams(window.location.search).get("selftest")==="1";
 const bench=document.querySelector("#benchmark"),benchFps=document.querySelector("#bench-fps"),benchFrame=document.querySelector("#bench-frame"),benchRender=document.querySelector("#bench-render"),benchAI=document.querySelector("#bench-ai");
-bench.hidden=!benchEnabled;
+bench.hidden=!benchRequested;
 const sampleFrames=[],sampleScene=[],sampleAI=[];
 let sceneStart=0,aiLastMs=0,lastBenchmarkUpdate=0;
 function updateBenchmark(frameMs,renderMs,aiMs,now){
@@ -329,6 +341,10 @@ function updateBenchmark(frameMs,renderMs,aiMs,now){
  lastBenchmarkUpdate=now;
  const sorted=[...sampleFrames].sort((a,b)=>a-b),pct=p=>sorted[Math.min(sorted.length-1,Math.floor((sorted.length-1)*p))],avg=a=>a.reduce((s,v)=>s+v,0)/a.length;
  const fps=1000/avg(sampleFrames);
+ root.KarmaWave18Perf.fps=Number(fps.toFixed(2));
+ root.KarmaWave18Perf.frameP95Ms=Number(pct(.95).toFixed(2));
+ root.KarmaWave18Perf.sceneMs=Number(avg(sampleScene).toFixed(2));
+ root.KarmaWave18Perf.aiMs=Number(avg(sampleAI).toFixed(2));
  benchFps.textContent="FPS avg "+fps.toFixed(1)+" | 1% low ~"+(1000/pct(.99)).toFixed(1);
  benchFrame.textContent="Frame P50 "+pct(.5).toFixed(1)+"ms | P95 "+pct(.95).toFixed(1)+"ms";
  benchRender.textContent="CPU scene/render "+avg(sampleScene).toFixed(2)+"ms";
@@ -532,8 +548,17 @@ function weaponInCamera(world){
   world.push(local[i+9],local[i+10]);
  }
 }
+let staticSceneMap=null,staticSceneVertices=[];
 function redraw(){
- const world=[];pushBox(world,{x:0,z:0,w:180,d:180,h:.2,y:-.24,material:"ground"});for(const box of map.blocks)pushBox(world,box);
+ // Factory/Castle architecture does not move. Wave17 rebuilt hundreds of
+ // textured static wall boxes on EVERY RAF frame, before every VBO upload.
+ // Cache CPU triangles per map and copy only their numeric values on redraw.
+ if(staticSceneMap!==map){
+  staticSceneMap=map;staticSceneVertices=[];
+  pushBox(staticSceneVertices,{x:0,z:0,w:180,d:180,h:.2,y:-.24,material:"ground"});
+  for(const box of map.blocks)pushBox(staticSceneVertices,box);
+ }
+ const world=staticSceneVertices.slice();
  worldBuffer=world.length/11;
  if(thirdPerson){
   pushBox(world,{x:player.x,z:player.z,w:.65,d:.6,h:.02,y:-.028,material:"shadow"});
@@ -637,6 +662,7 @@ function shoot(){
  if(match&&player.hp<=0)return;
  if(ammo===0){audio.play("dry");doReload();return;}
  ammo--;flash=.12;shotPoseTimer=gun.kind==="sniper"?.36:.25;fireCooldown=gun.rate;
+ diagnostics.shots++;
  audio.play("fire");
  const recoilImpulse=WM.recoil(gun,aiming,shotSequence++);
  root.KarmaWave13Recoil={id:gun.id,shot:shotSequence,...recoilImpulse};
@@ -687,10 +713,16 @@ function shoot(){
   if(trace16){
    if(root.KarmaWave16Shot.actorEligible){
     victim=trace16.actor;
+    const hpBefore=victim.hp;
     traceDamaged=T.damage(match,victim,player,gun.damage);
+    if(traceDamaged){diagnostics.hits++;diagnostics.damage+=Math.max(0,hpBefore-victim.hp);}
    }
+   if(trace16.kind==="muzzle-blocked"||trace16.kind==="cover")diagnostics.blocked++;
    root.KarmaWave16Shot.hit=traceDamaged;
-  }else victim=T.playerShoot(match,player,player.yaw,gun.damage,gun.range,actualPitch,clearLine,thirdPerson?screenAim:null);
+  }else{
+   victim=T.playerShoot(match,player,player.yaw,gun.damage,gun.range,actualPitch,clearLine,thirdPerson?screenAim:null);
+   if(victim){diagnostics.hits++;diagnostics.damage+=gun.damage;}
+  }
   if(victim)audio.play("hit");
   if(explosive){
    const d=victim?Math.hypot(victim.x-player.x,victim.z-player.z):Math.min(gun.range,gun.kind==="grenade"?13:20);
@@ -850,37 +882,70 @@ function frame(now){
     targets:AA.report(map,player,cam,muzzle,canvas.clientWidth,canvas.clientHeight,aiming?.72:1.25,[3,5,15,30])};
   }
  }
- const w=Math.max(1,Math.floor(canvas.clientWidth*Math.min(2,devicePixelRatio||1))),h=Math.max(1,Math.floor(canvas.clientHeight*Math.min(2,devicePixelRatio||1)));
+ const renderScale=new URLSearchParams(location.search).has("scale")?
+  Math.max(.5,Math.min(1,Number(new URLSearchParams(location.search).get("scale"))||.8)):
+  wave18Quality==="original"?1:wave18Quality==="fast"?.65:wave18AutoLod>=1?.65:.8;
+ root.KarmaWave18Perf.renderScale=renderScale;
+ const w=Math.max(1,Math.floor(canvas.clientWidth*Math.min(2,devicePixelRatio||1)*renderScale)),h=Math.max(1,Math.floor(canvas.clientHeight*Math.min(2,devicePixelRatio||1)*renderScale));
  if(w!==canvas.width||h!==canvas.height){canvas.width=w;canvas.height=h;gl.viewport(0,0,w,h);}
  // Real shadow-map pass: render world geometry into a depth texture from directional sunlight.
- gl.bindFramebuffer(gl.FRAMEBUFFER,shadowFramebuffer);
- gl.viewport(0,0,SHADOW_SIZE,SHADOW_SIZE);
- gl.clear(gl.DEPTH_BUFFER_BIT);
- gl.useProgram(shadowProgram);
- gl.bindBuffer(gl.ARRAY_BUFFER,gpu);gl.enableVertexAttribArray(shadowPosition);
- gl.vertexAttribPointer(shadowPosition,3,gl.FLOAT,false,44,0);
- gl.uniformMatrix4fv(shadowLightVP,false,lightVP);
- gl.drawArrays(gl.TRIANGLES,0,sceneVertices);
- if(match&&!skinDisabled)skinned.render(skinCheck?[{id:99,team:"german",x:player.x,z:player.z-12,angle:0,anim:1.3,alive:true,speed:1}]:match.bots,null,lightVP,shadowTex,true);
+ // On slow systems update the 1024px sun-shadow map at 20Hz instead of 60Hz.
+ // Main scene/actual shot & AI logic stay full-frame; old shadowTex is re-used.
+ const shadowEvery=wave18Quality==="fast"||wave18AutoLod>=1?3:1;
+ if(root.KarmaWave18Perf.frames%shadowEvery===0){
+  gl.bindFramebuffer(gl.FRAMEBUFFER,shadowFramebuffer);
+  gl.viewport(0,0,SHADOW_SIZE,SHADOW_SIZE);
+  gl.clear(gl.DEPTH_BUFFER_BIT);
+  gl.useProgram(shadowProgram);
+  gl.bindBuffer(gl.ARRAY_BUFFER,gpu);gl.enableVertexAttribArray(shadowPosition);
+  gl.vertexAttribPointer(shadowPosition,3,gl.FLOAT,false,44,0);
+  gl.uniformMatrix4fv(shadowLightVP,false,lightVP);
+  gl.drawArrays(gl.TRIANGLES,0,sceneVertices);
+  if(match&&!skinDisabled)skinned.render(skinCheck?[{id:99,team:"german",x:player.x,z:player.z-12,angle:0,anim:1.3,alive:true,speed:1}]:match.bots,null,lightVP,shadowTex,true);
+ }
  gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.viewport(0,0,w,h);
  gl.clearColor(...map.sky,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
  gl.useProgram(program);bindStaticAttributes();gl.uniformMatrix4fv(uProj,false,sceneProjection);gl.uniformMatrix4fv(uView,false,sceneView);gl.uniform3fv(uFog,map.fog);gl.uniform1f(uTime,now/1000);gl.uniform3f(uEye,thirdPerson?cameraState.eye.x:player.x,thirdPerson?cameraState.eye.y:(player.eyeHeight||1.65),thirdPerson?cameraState.eye.z:player.z);
  gl.uniformMatrix4fv(uLightVP,false,lightVP);gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,shadowTex);gl.uniform1i(uShadowMap,0);
  gl.drawArrays(gl.TRIANGLES,0,sceneVertices);
- if(match&&!skinDisabled)skinned.render(skinCheck?[{id:99,team:"german",x:player.x,z:player.z-12,angle:0,anim:1.3,alive:true,speed:1}]:match.bots.filter(b=>!germanRig||b.team!=="german"),{projection:sceneProjection,view:sceneView},lightVP,shadowTex,false,thirdPerson?null:player);
- if(match&&germanRig&&!skinCheck)for(const bot of match.bots){
-  if(bot.team!=="german"||!bot.alive)continue;
-  if(!thirdPerson&&Math.hypot(bot.x-player.x,bot.z-player.z)<2.9)continue;
+ // Wave18 LOD: only nearby, camera-visible German AI use the authentic skinned
+ // artist mesh. All distant/off-camera soldiers still appear via cheap GPU skin.
+ const actorStart=performance.now(),fullBots=[];
+ if(match&&germanRig&&!skinCheck&&wave18Quality!=="fast"&&wave18AutoLod<1){
+  for(const bot of match.bots){
+   if(bot.team!=="german"||!bot.alive)continue;
+   const dx=bot.x-player.x,dz=bot.z-player.z,dist=Math.hypot(dx,dz);
+   const forward=dx*Math.sin(player.yaw)-dz*Math.cos(player.yaw);
+   if(wave18Quality==="original"||(dist<12&&forward>-3)){
+    if(!thirdPerson&&dist<2.9)continue;
+    fullBots.push(bot);
+   }
+  }
+ }
+ const highBotIds=new Set(fullBots.map(b=>b.id));
+ if(match&&!skinDisabled)skinned.render(skinCheck?[{id:99,team:"german",x:player.x,z:player.z-12,angle:0,anim:1.3,alive:true,speed:1}]:
+   match.bots.filter(b=>!highBotIds.has(b.id)),{projection:sceneProjection,view:sceneView},lightVP,shadowTex,false,thirdPerson?null:player);
+ for(const bot of fullBots){
   const clip=bot.shotTimer>0?"shoot":bot.reloading?"reload":bot.speed>3?"run":bot.speed>.1?"walk":"idle";
   germanRig.render({x:bot.x,z:bot.z,angle:bot.angle||0,phase:bot.anim||0,clip,
-   team:"german",projection:sceneProjection,view:sceneView});
+   team:"german",projection:sceneProjection,view:sceneView,useIK:false});
  }
- if(thirdPerson&&highRig){
+ if(thirdPerson&&(wave18AutoLod<2?highRig:legacyRig)){
   const drivenClip=player.hp<=0?"death":reload>0?"reload":shotPoseTimer>0?"shoot":keys.control||keys.c?"crouch":playerMoveSpeed>3?"run":playerMoveSpeed>.12?"walk":"idle";
   const clip=["idle","walk","run","shoot","reload","crouch","death"].includes(wave8Pose)?wave8Pose:drivenClip;
   const phase=clip==="shoot"&&!wave8Pose?Math.max(0,.25-shotPoseTimer)*2.5:
    clip==="reload"&&!wave8Pose?Math.max(0,reloadTotal-reload)*.75:playerWalkPhase;
-  highRig.render({x:player.x,z:player.z,angle:player.yaw,phase,clip,team:player.team||teamPicker.value,projection:sceneProjection,view:sceneView});
+  (wave18AutoLod<2?highRig:legacyRig).render({x:player.x,z:player.z,angle:player.yaw,phase,clip,team:player.team||teamPicker.value,projection:sceneProjection,view:sceneView});
+ }
+ root.KarmaWave18Perf.actorRenderMs=performance.now()-actorStart;
+ root.KarmaWave18Perf.realBots=fullBots.length;
+ root.KarmaWave18Perf.frames++;
+ // Sustained >25ms/frame auto-degrades bot draw quality; >34ms also reduces
+ // player visual complexity. Keep published telemetry explicit and overrideable.
+ if(wave18Quality==="balanced"&&sampleFrames.length>=100&&root.KarmaWave18Perf.frames%90===0){
+  const avg=sampleFrames.reduce((a,b)=>a+b,0)/sampleFrames.length;
+  if(avg>34)wave18AutoLod=2;else if(avg>25)wave18AutoLod=Math.max(wave18AutoLod,1);
+  root.KarmaWave18Perf.autoLod=wave18AutoLod;
  }
  mapDraw();
  const glow=document.querySelector("#glow");glow.style.opacity=String(Math.min(.9,flash*5));
@@ -1366,13 +1431,18 @@ if(new URLSearchParams(location.search).get("wave17Selftest")==="1"){
   mark("actual hit tracks correct live bot",hit?.hit&&hit?.actorId===enemy.id,String(hit?.actorId));
   mark("real-world impact XYZ",hit?.impact?.length===3,hit?.impact?.map(v=>v.toFixed(3)).join(","));
   mark("reticle projected ray point <1px",hit?.kind==="actor"&&hit.projectedErrorPx<1,hit?.projectedErrorPx);
-  mark("authentic CC0 64-bone model loaded",root.KarmaWave17Model?.state==="loaded"&&root.KarmaWave17Model?.joints===64,root.KarmaWave17Model?.state);
-  mark("author PBR 5 material sets",root.KarmaWave17Model?.loadedTextures===5,root.KarmaWave17Model?.loadedTextures);
+  // Loading/deserializing 11MB GLB + 5 texture sets may continue past the first
+  // 2-second gameplay shot on software WebGL. Inspect loading separately AFTER
+  // asynchronous images and GPU uploads settle; never mark transient 0 as final.
   const covered=A14.trace({map:{blocks:[{x:0,z:-2,w:4,d:.3,h:3,y:0,solid:true}]},camera:Camera.compute({blocks:[]},{x:0,z:0,yaw:0,pitch:-.08,eyeHeight:1.65},true),muzzle:[.32,1.35,-.65],actors:[{x:0,z:-5,hp:100,height:2}]});
   mark("3D hard cover blocks projected shot",covered.kind==="cover",covered.kind);
   root.KarmaWave17QA={...root.KarmaWave17QA,liveShot:hit,movingBotId:enemy.id,hpBefore:hp0,hpAfter:enemy.hp,movedMeters:moved,
     model:root.KarmaWave17Model,positionBefore:old};
  },2000);
+ setTimeout(()=>{
+  mark("authentic CC0 64-bone model loaded",root.KarmaWave17Model?.state==="loaded"&&root.KarmaWave17Model?.joints===64,root.KarmaWave17Model?.state);
+  mark("author PBR 5 material sets",root.KarmaWave17Model?.loadedTextures===5,root.KarmaWave17Model?.loadedTextures);
+ },6500);
 }
 requestAnimationFrame(frame);
 })(globalThis);

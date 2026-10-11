@@ -222,6 +222,7 @@ function create(gl,options={}){
  for(const key of ["german","soviet","normal","orm"])fabric[key]=makeTexture(key);
  for(const key of ["albedo","normal","roughness"])photo[key]=makeTexture(key,root.KarmaWW2Photo?.[key],photo.ready);
  let leftIK=new Map(),lastIK={enabled:false,error:Infinity,iterations:0};
+ const poseCache=new Map();
  function matrixAt(id,phase,clip,cache){
   if(cache.has(id))return cache.get(id);
   const node=json.nodes[id],name=canonical(node.name);
@@ -311,12 +312,19 @@ function create(gl,options={}){
   lastIK={enabled:true,error:error*modelScale,initial:initial*modelScale,iterations:n+1,shoulderDistance:Math.hypot(...sub(goal,shoulderPos))*modelScale};
   return lastIK;
  }
- function pose(phase,clip){
+ function pose(phase,clip,allowCache=false){
+  const key=clip+":"+Math.floor(phase*24);
+  if(allowCache&&poseCache.has(key))return poseCache.get(key);
   const cache=new Map();
   for(let j=0;j<joints.length;j++){
    const world=matrixAt(joints[j],phase,clip,cache);
    const inverse=inverses.subarray(j*16,(j+1)*16),current=matmul(world,inverse);
    palettes.set(current,j*16);
+  }
+  if(allowCache){
+   const baked=new Float32Array(palettes);
+   if(poseCache.size>96)poseCache.delete(poseCache.keys().next().value);
+   poseCache.set(key,baked);return baked;
   }
   return palettes;
  }
@@ -326,9 +334,15 @@ function create(gl,options={}){
   const m=matrixAt(id,phase,clip,new Map()),co=-Math.cos(angle),si=-Math.sin(angle);
   return [x+(m[12]*co-m[14]*si)*modelScale,m[13]*modelScale,z+(m[12]*si+m[14]*co)*modelScale];
  }
- function render({x,z,angle=0,phase=0,clip="idle",team="german",projection,view}){
+ function render({x,z,angle=0,phase=0,clip="idle",team="german",projection,view,useIK=true}){
   gl.useProgram(program);
-  gl.uniformMatrix4fv(uni["uBones[0]"],false,pose(phase,clip));
+  // IK belongs to the player's actual foregrip, never copy it onto enemy/allied
+  // bots sharing this renderer. Quantize/reuse authentic UAL pose matrices for AI.
+  const savedIK=leftIK;
+  if(!useIK)leftIK=new Map();
+  const baked=pose(phase,clip,period&&!useIK);
+  if(!useIK)leftIK=savedIK;
+  gl.uniformMatrix4fv(uni["uBones[0]"],false,baked);
   gl.uniformMatrix4fv(uni.uProjection,false,projection);
   gl.uniformMatrix4fv(uni.uView,false,view);
   gl.uniform3f(uni.uWorld,x,0,z);
