@@ -114,13 +114,13 @@ function create(gl,options={}){
  precision highp float;
  in vec3 aPosition;in vec3 aNormal;in vec4 aJoint;in vec4 aWeight;in vec2 aUV;
  uniform mat4 uBones[65];uniform mat4 uProjection;uniform mat4 uView;
-  uniform vec3 uWorld;uniform vec2 uFacing;uniform float uModelScale;
+ uniform vec3 uWorld;uniform vec2 uFacing;uniform float uModelScale;uniform float uFootLift;
  out vec3 vNormal;out vec3 vPosition;out vec3 vBody;out vec2 vUV;
  void main(){
   mat4 sk=uBones[int(aJoint.x)]*aWeight.x+uBones[int(aJoint.y)]*aWeight.y+uBones[int(aJoint.z)]*aWeight.z+uBones[int(aJoint.w)]*aWeight.w;
   vec4 p=sk*vec4(aPosition,1.);p.xyz*=uModelScale;
   vec3 n=normalize(mat3(sk)*aNormal);
-  vec3 world=vec3(p.x*uFacing.x-p.z*uFacing.y,p.y,p.x*uFacing.y+p.z*uFacing.x)+uWorld;
+  vec3 world=vec3(p.x*uFacing.x-p.z*uFacing.y,p.y+uFootLift,p.x*uFacing.y+p.z*uFacing.x)+uWorld;
   vNormal=normalize(vec3(n.x*uFacing.x-n.z*uFacing.y,n.y,n.x*uFacing.y+n.z*uFacing.x));
   vPosition=world;vBody=p.xyz;vUV=aUV;gl_Position=uProjection*uView*vec4(world,1.);
  }`;
@@ -181,7 +181,7 @@ function create(gl,options={}){
  function shader(kind,s){const o=gl.createShader(kind);gl.shaderSource(o,s);gl.compileShader(o);if(!gl.getShaderParameter(o,gl.COMPILE_STATUS))throw Error("CC0 rig shader "+gl.getShaderInfoLog(o));return o;}
  const program=gl.createProgram();gl.attachShader(program,shader(gl.VERTEX_SHADER,vs));gl.attachShader(program,shader(gl.FRAGMENT_SHADER,fs));gl.linkProgram(program);if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(program));
  const attrs={position:gl.getAttribLocation(program,"aPosition"),normal:gl.getAttribLocation(program,"aNormal"),joints:gl.getAttribLocation(program,"aJoint"),weights:gl.getAttribLocation(program,"aWeight"),uv:gl.getAttribLocation(program,"aUV")};
- const uni=Object.fromEntries(["uBones[0]","uProjection","uView","uWorld","uFacing","uModelScale","uTint","uLight","uFabricAlbedo","uFabricNormal","uFabricORM","uFabricReady","uPhotoReady","uArtistAlbedo","uArtistNormal","uArtistMR","uArtistReady"].map(n=>[n,gl.getUniformLocation(program,n)]));
+ const uni=Object.fromEntries(["uBones[0]","uProjection","uView","uWorld","uFacing","uModelScale","uFootLift","uTint","uLight","uFabricAlbedo","uFabricNormal","uFabricORM","uFabricReady","uPhotoReady","uArtistAlbedo","uArtistNormal","uArtistMR","uArtistReady"].map(n=>[n,gl.getUniformLocation(program,n)]));
  const fabric={german:null,soviet:null,normal:null,orm:null,ready:{}};
  const photo={albedo:null,normal:null,roughness:null,ready:{}};
  const artistTextureState=new Map();
@@ -234,7 +234,14 @@ function create(gl,options={}){
   // source quaternion relative to its source rest pose, then apply the delta
   // in the Wave8 CC0 target skeleton's LOCAL joint basis.
   const activeClip=(clip==="idle"||walking)&&/upperarm|lowerarm|hand_|clavicle/.test(name)?"aim":clip;
-  const relative=sampleUAL(name,activeClip,phase);
+  let relative=sampleUAL(name,activeClip,phase);
+  // Preserve the shoulder-supported weapon pose during the real shoot/reload
+  // UAL clips. Without this the right trigger wrist jumps away from the stock.
+  if(period&&/^(clavicle|upperarm|lowerarm|hand_)/.test(name)&&
+      (clip==="shoot"||clip==="reload")){
+   const supported=sampleUAL(name,"aim",phase);
+   if(supported&&relative)relative=nlerp(supported,relative,clip==="shoot"?.4:.62);
+  }
   if(relative){
    const basis=period?retarget.basis[name]:null;
    const localDelta=basis?qmul(qmul(basis,relative),[-basis[0],-basis[1],-basis[2],basis[3]]):relative;
@@ -277,11 +284,30 @@ function create(gl,options={}){
   cache.set(id,world);return world;
  }
  const palettes=new Float32Array(65*16),modelScale=period?.02:1;
+ const footL=nameToId.get("foot_l"),footR=nameToId.get("foot_r");
+ const isFootRig=period&&footL!==undefined&&footR!==undefined;
+ const soleMinimum=(phase,clip)=>{
+  const cache=new Map(),a=matrixAt(footL,phase,clip,cache),b=matrixAt(footR,phase,clip,cache);
+  return Math.min(a[13],b[13]);
+ };
+ const restingSole=isFootRig?soleMinimum(0,"idle"):0;
+ let lastFootContact={enabled:false,liftMeters:0,preDifferenceMeters:0,postDifferenceMeters:0};
+ let lastFootKey=null,lastFootOffset=0;
+ function footOffset(phase,clip){
+  if(!isFootRig||!["walk","run","shoot","reload","crouch","idle"].includes(clip))return 0;
+  const key=clip+":"+phase;
+  if(key===lastFootKey)return lastFootOffset;
+  const deviation=(restingSole-soleMinimum(phase,clip))*modelScale;
+  const lifted=clamp(deviation,-.075,.075);
+  lastFootKey=key;lastFootOffset=lifted;
+  lastFootContact={enabled:true,liftMeters:lifted,preDifferenceMeters:deviation,postDifferenceMeters:deviation-lifted};
+  return lifted;
+ }
  function setLeftGrip({target,x,z,angle,phase,clip}){
   leftIK=new Map();
   if(!target||clip==="death"){lastIK={enabled:false,error:Infinity,iterations:0};return lastIK;}
   const co=-Math.cos(angle),si=-Math.sin(angle),dx=target[0]-x,dz=target[2]-z;
-  const goal=[(co*dx+si*dz)/modelScale,target[1]/modelScale,(-si*dx+co*dz)/modelScale];
+  const goal=[(co*dx+si*dz)/modelScale,(target[1]-footOffset(phase,clip))/modelScale,(-si*dx+co*dz)/modelScale];
   const hand=nameToId.get("hand_l"),elbow=nameToId.get("lowerarm_l"),
     shoulder=nameToId.get("upperarm_l"),clavicle=nameToId.get("clavicle_l");
   if([hand,elbow,shoulder,clavicle].some(id=>id===undefined))return lastIK;
@@ -332,7 +358,7 @@ function create(gl,options={}){
   const id=nameToId.get(name);
   if(id===undefined)throw Error("Unknown CC0 joint: "+name);
   const m=matrixAt(id,phase,clip,new Map()),co=-Math.cos(angle),si=-Math.sin(angle);
-  return [x+(m[12]*co-m[14]*si)*modelScale,m[13]*modelScale,z+(m[12]*si+m[14]*co)*modelScale];
+  return [x+(m[12]*co-m[14]*si)*modelScale,m[13]*modelScale+footOffset(phase,clip),z+(m[12]*si+m[14]*co)*modelScale];
  }
  function render({x,z,angle=0,phase=0,clip="idle",team="german",projection,view,useIK=true}){
   gl.useProgram(program);
@@ -347,6 +373,7 @@ function create(gl,options={}){
   gl.uniformMatrix4fv(uni.uView,false,view);
   gl.uniform3f(uni.uWorld,x,0,z);
   gl.uniform1f(uni.uModelScale,modelScale);
+  gl.uniform1f(uni.uFootLift,useIK?footOffset(phase,clip):0);
   // CC0 model faces +Z in its original GLB basis; the FPS world faces -Z at yaw=0.
   // Rotate by PI so 3P shows the soldier's back, and weapon/reticle align with yaw.
   gl.uniform2f(uni.uFacing,-Math.cos(angle),-Math.sin(angle));
@@ -375,7 +402,7 @@ function create(gl,options={}){
    gl.drawElements(gl.TRIANGLES,m.count,m.type,0);
   }
  }
- return {render,jointPoint,setLeftGrip,getIK:()=>lastIK,period,artistMaterialsReady:()=>artistMaterials.filter(m=>m.base?.ready&&m.normal?.ready&&m.mr?.ready).length,photoReady:()=>!!(photo.ready.albedo&&photo.ready.normal&&photo.ready.roughness),ualClips:Object.keys(ualClips),ualBones:ualBones.size,
+ return {render,jointPoint,setLeftGrip,getIK:()=>lastIK,getFootContact:()=>lastFootContact,period,artistMaterialsReady:()=>artistMaterials.filter(m=>m.base?.ready&&m.normal?.ready&&m.mr?.ready).length,photoReady:()=>!!(photo.ready.albedo&&photo.ready.normal&&photo.ready.roughness),ualClips:Object.keys(ualClips),ualBones:ualBones.size,
    fabricReady:team=>!!(fabric.ready[team]&&fabric.ready.normal&&fabric.ready.orm),
    source:period?"Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget":"Quaternius Universal Base Characters 65-bone + real UAL1 Standard CC0 animation retarget",joints:joints.length,meshCount:renderMesh.length,triangles:renderMesh.reduce((a,m)=>a+m.count/3,0)};
 }

@@ -935,7 +935,10 @@ function frame(now){
   const clip=["idle","walk","run","shoot","reload","crouch","death"].includes(wave8Pose)?wave8Pose:drivenClip;
   const phase=clip==="shoot"&&!wave8Pose?Math.max(0,.25-shotPoseTimer)*2.5:
    clip==="reload"&&!wave8Pose?Math.max(0,reloadTotal-reload)*.75:playerWalkPhase;
-  (wave18AutoLod<2?highRig:legacyRig).render({x:player.x,z:player.z,angle:player.yaw,phase,clip,team:player.team||teamPicker.value,projection:sceneProjection,view:sceneView});
+  const activeRig=wave18AutoLod<2?highRig:legacyRig;
+  activeRig.render({x:player.x,z:player.z,angle:player.yaw,phase,clip,team:player.team||teamPicker.value,projection:sceneProjection,view:sceneView});
+  root.KarmaWave19Pose={clip,foot:activeRig.getFootContact?.()||null,
+    ik:activeRig.getIK?.()||null,source:activeRig.source};
  }
  root.KarmaWave18Perf.actorRenderMs=performance.now()-actorStart;
  root.KarmaWave18Perf.realBots=fullBots.length;

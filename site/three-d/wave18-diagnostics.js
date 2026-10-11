@@ -27,6 +27,15 @@ panel.innerHTML=`<strong style="font-size:15px">실제 브라우저 성능 진�
 app.appendChild(panel);
 const $=id=>panel.querySelector("#"+id);
 const params=new URLSearchParams(location.search);
+function graphicsRenderer(){
+ try{
+  const gl=document.querySelector("#viewport")?.getContext("webgl2");
+  if(!gl)return "WebGL2 unavailable";
+  const ext=gl.getExtension("WEBGL_debug_renderer_info");
+  return ext?String(gl.getParameter(ext.UNMASKED_RENDERER_WEBGL)):String(gl.getParameter(gl.RENDERER))+" (masked)";
+ }catch{return "GPU renderer not exposed by browser";}
+}
+const gpuDescription=graphicsRenderer();
 $("wave18-quality").value=root.KarmaWave18Perf?.quality||params.get("quality")||"fast";
 $("wave18-quality").addEventListener("change",event=>{
  const next=new URL(location.href);next.searchParams.set("quality",event.target.value);
@@ -38,6 +47,8 @@ button.addEventListener("click",()=>{
 });
 const snapshot=()=>({
  version:"Wave18",map:params.get("map")||"factory",
+ gpuRenderer:gpuDescription,
+ devicePixelRatio:devicePixelRatio,
  quality:root.KarmaWave18Perf?.quality||"loading",
  graphicsScale:root.KarmaWave18Perf?.renderScale||null,
  autoLod:root.KarmaWave18Perf?.autoLod??null,
@@ -55,6 +66,8 @@ const snapshot=()=>({
  coverBlocked:root.KarmaDiagnostics?.blocked??0,
  aimKind:root.KarmaWave16Shot?.kind||null,
  impactXYZ:root.KarmaWave16Shot?.impact?.map(n=>+n.toFixed(2))||null
+ ,footStabilization:root.KarmaWave19Pose?.foot||null,
+ sourceRig:root.KarmaWave19Pose?.source||null
 });
 root.KarmaWave18UserDiagnostics={snapshot};
 function update(){
@@ -62,12 +75,14 @@ function update(){
  const s=snapshot(),fmt=v=>v==null?"아직 측정 없음":v;
  $("wave18-stat-values").textContent=
   "FPS "+fmt(s.fps)+" | P95 "+fmt(s.frameP95Ms)+" ms\n"+
+  "GPU "+s.gpuRenderer+"\n"+
   "CPU draw "+fmt(s.cpuSceneMs)+" ms | AI "+fmt(s.cpuAiMs)+" ms\n"+
   "품질 "+s.quality+" · 렌더 배율 "+fmt(s.graphicsScale)+" · 자동 단계 "+fmt(s.autoLod)+"\n"+
   "실사 AI 표시 "+s.live3dBots+" · 모델 "+s.modelState+"\n"+
   "사격 "+s.shots+"발 · 명중 "+s.hits+" · 명중률 "+fmt(s.accuracyPct)+"%\n"+
   "피해 "+s.damage+" · 엄폐 차단 "+s.coverBlocked+"\n"+
-  "마지막 충돌 "+fmt(s.aimKind);
+  "마지막 충돌 "+fmt(s.aimKind)+"\n"+
+  "발 보정 "+(s.footStabilization?.liftMeters?.toFixed(3)??"--")+"m";
 }
 setInterval(update,800);
 if(params.get("diagnostics")==="1"){panel.style.display="block";button.setAttribute("aria-expanded","true");update();}

@@ -1,0 +1,64 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KARMA REBIRTH Windows 실기 FPS 비교 — v17 vs v19</title>
+<style>body{background:#101a19;color:#e0eee2;font:15px/1.5 system-ui;margin:18px}h1{font-size:23px}button,select{padding:9px;background:#2d5342;color:#fff;border:1px solid #92b39d;border-radius:5px}button{cursor:pointer}button:disabled{opacity:.5}#screen{width:100%;height:55vh;min-height:350px;border:1px solid #415d51;background:#161f1c}pre{white-space:pre-wrap;background:#172b23;padding:10px;border-radius:5px;max-height:240px;overflow:auto}small{color:#b1c8ba}</style>
+<h1>KARMA REBIRTH — 실제 Windows Chrome 성능 비교</h1>
+<p>이 PC에서 Wave 17과 최신 게임을 <b>같은 창 크기 · 같은 팀 · 같은 맵 · 같은 시점</b>으로 연속 실행합니다. GPU 정보와 FPS·P95 프레임 시간, CPU 렌더·AI 처리 시간을 기기 내 JSON으로 저장합니다. 자동 전송하지 않습니다.</p>
+<label>맵 <select id="map"><option value="factory">Factory</option><option value="castle">Castle</option></select></label>
+<label>시점 <select id="cam"><option value="third">3인칭</option><option value="first">1인칭</option></select></label>
+<button id="begin">동일 조건 A/B 측정 시작 (약 70초)</button>
+<button id="save" disabled>JSON 결과 다운로드</button>
+<p id="status">Windows Chrome/Edge에서 실행하세요. 17 원본과 최신 빌드를 차례로 보여줍니다.</p>
+<iframe id="screen" title="GPU performance benchmark game display" allow="fullscreen"></iframe>
+<pre id="result">아직 실행 전입니다.</pre>
+<small>결과 파일에 브라우저/그래픽 렌더러 정보가 들어갈 수 있으니, 공유 전 확인하세요. 숨김 탭·절전·기타 앱 부하의 영향을 받습니다. Chrome WebGL GPU 정보가 차단되면 unavailable로 기록됩니다.</small>
+<script>
+(()=>{"use strict";
+const $=s=>document.querySelector(s),frame=$("#screen"),start=$("#begin"),save=$("#save"),log=$("#result"),status=$("#status");
+let report=null;
+const sleep=n=>new Promise(r=>setTimeout(r,n));
+function sample(){
+ const win=frame.contentWindow,doc=frame.contentDocument;
+ const txt=id=>doc.getElementById(id)?.textContent||"";
+ const number=(t,re)=>{const m=t.match(re);return m?Number(m[1]):null};
+ const canvas=doc.getElementById("viewport");
+ const gl=canvas?.getContext("webgl2");
+ let renderer="unavailable",vendor="unavailable";
+ try{const ext=gl?.getExtension("WEBGL_debug_renderer_info");if(ext){renderer=String(gl.getParameter(ext.UNMASKED_RENDERER_WEBGL));vendor=String(gl.getParameter(ext.UNMASKED_VENDOR_WEBGL));}else if(gl)renderer=String(gl.getParameter(gl.RENDERER));}catch{}
+ return {fps:number(txt("bench-fps"),/FPS avg\s+([\d.]+)/),low1:number(txt("bench-fps"),/1% low ~([\d.]+)/),
+ p95ms:number(txt("bench-frame"),/P95\s+([\d.]+)/),cpuSceneMs:number(txt("bench-render"),/render\s+([\d.]+)/),cpuAiMs:number(txt("bench-ai"),/logic\s+([\d.]+)/),
+ renderer,vendor,webgl2:!!gl,resolution:canvas?[canvas.width,canvas.height]:null,model:win?.KarmaWave17Model?.state||null};
+}
+function stat(vals){const v=vals.filter(Number.isFinite).sort((a,b)=>a-b);if(!v.length)return null;return Math.round(v[Math.floor(v.length/2)]*100)/100;}
+async function benchmark(test){
+ status.textContent=test.label+" 로딩... ("+(test.index+1)+"/2)";
+ const q=new URLSearchParams({preview:"1",benchmark:"1",map:$("#map").value,team:"german",camera:$("#cam").value});
+ if(test.quality)q.set("quality",test.quality);
+ frame.src=test.path+"?"+q;
+ await new Promise((ok,no)=>{frame.onload=ok;frame.onerror=()=>no(Error("iframe load failed"));});
+ await sleep(7000); // Model decode & shader compile warmup.
+ const samples=[];for(let i=0;i<18;i++){await sleep(1000);const v=sample();samples.push(v);status.textContent=test.label+" — 수집 "+(i+1)+"/18초";log.textContent=JSON.stringify(v,null,2);}
+ const stable=samples.slice(3);
+ const last=stable.at(-1)||samples.at(-1)||{};
+ return {label:test.label,quality:test.quality||"Wave17 original",seconds:18,
+  medianFps:stat(stable.map(s=>s.fps)),medianP95Ms:stat(stable.map(s=>s.p95ms)),medianSceneCpuMs:stat(stable.map(s=>s.cpuSceneMs)),medianAiMs:stat(stable.map(s=>s.cpuAiMs)),
+  gpuVendor:last.vendor,gpuRenderer:last.renderer,webgl2:last.webgl2,canvasPixels:last.resolution,validSamples:stable.filter(s=>Number.isFinite(s.fps)).length};
+}
+start.onclick=async()=>{
+ start.disabled=true;save.disabled=true;report=null;
+ try{
+  const tests=[
+   {index:0,label:"Wave 17 공식 배포본",path:"/benchmarks/wave17/three-d/index.html"},
+   {index:1,label:"최신 최적화 빌드",path:"/three-d/index.html",quality:"fast"}];
+  report={schema:"karma-local-browser-benchmark-v1",created:new Date().toISOString(),userAgent:navigator.userAgent,devicePixelRatio:devicePixelRatio,
+   map:$("#map").value,camera:$("#cam").value,visibility:document.visibilityState,tests:[]};
+  for(const test of tests)report.tests.push(await benchmark(test));
+  const [a,b]=report.tests;report.deltaFps=(a.medianFps!=null&&b.medianFps!=null)?Math.round((b.medianFps-a.medianFps)*100)/100:null;
+  report.speedupPct=(a.medianFps&&b.medianFps)?Math.round((b.medianFps/a.medianFps-1)*1000)/10:null;
+  log.textContent=JSON.stringify(report,null,2);status.textContent="완료. JSON을 저장하고 이 채팅에 첨부해 주세요.";
+  save.disabled=false;
+ }catch(err){status.textContent="테스트 중단: "+String(err);log.textContent=String(err);}
+ finally{start.disabled=false;}
+};
+save.onclick=()=>{if(!report)return;const blob=new Blob([JSON.stringify(report,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="KARMA_Windows_Wave17_vs_latest_"+report.map+"_"+report.camera+".json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1500);};
+})();
+</script></html>
