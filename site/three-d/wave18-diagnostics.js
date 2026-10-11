@@ -46,7 +46,7 @@ button.addEventListener("click",()=>{
  button.setAttribute("aria-expanded",String(open));if(open)update();
 });
 const snapshot=()=>({
- version:"Wave20.2",map:params.get("map")||"factory",
+ version:"Wave21",map:params.get("map")||"factory",
  gpuRenderer:gpuDescription,
  devicePixelRatio:devicePixelRatio,
  quality:root.KarmaWave18Perf?.quality||"loading",
@@ -68,6 +68,10 @@ const snapshot=()=>({
   sovietGLB:root.KarmaWave20NPC.sovietInterim?.triangles||null,
   sovietHistoricalAccuracy:"Temporary CC0 German-derived faction stand-in; not authentic Soviet soldier"
  }:null,
+ jump:root.KarmaWave21Jump||null,
+ weaponFX:root.KarmaWave21VFX?.stats||null,
+ vfxGpuSprites:root.KarmaWave21VFXPoints||0,
+ environmentAtlas:root.KarmaWave21Environment?.status||null,
  live3dBots:root.KarmaWave18Perf?.realBots??0,
  shots:root.KarmaDiagnostics?.shots??0,
  hits:root.KarmaDiagnostics?.hits??0,
@@ -96,6 +100,8 @@ function update(){
   "CPU draw "+fmt(s.cpuSceneMs)+" ms | AI "+fmt(s.cpuAiMs)+" ms\n"+
   "품질 "+s.quality+" · 렌더 배율 "+fmt(s.graphicsScale)+" · 자동 단계 "+fmt(s.autoLod)+"\n"+
   "실제 CC0 스킨 AI "+s.live3dBots+" · 모델 "+s.modelState+"\n"+
+  "Space 높이 "+((s.jump?.height||0)*100).toFixed(0)+"cm / 접지 "+(s.jump?.grounded?"YES":"AIR")+"\n"+
+  "무기FX "+(s.weaponFX?.active||0)+" / GPU스프라이트 "+s.vfxGpuSprites+" · 배경재질 "+s.environmentAtlas+"\n"+
   "독일군 "+(s.npcModels?.germanSkinned??0)+" / 소련군측 임시 "+(s.npcModels?.sovietDerivedSkinned??0)+
    " / 기본 모델 "+(s.npcModels?.fallback??0)+"\n"+
   "사격 "+s.shots+"발 · 명중 "+s.hits+" · 명중률 "+fmt(s.accuracyPct)+"%\n"+

@@ -312,14 +312,14 @@ function create(gl,options={}){
   lastFootContact={enabled:true,liftMeters:lifted,preDifferenceMeters:deviation,postDifferenceMeters:deviation-lifted};
   return lifted;
  }
- function setLeftGrip({target,x,z,angle,phase,clip}){
+ function setLeftGrip({target,x,z,angle,phase,clip,y=0}){
   // Foot corrections are actor/frame-local: discard the preceding frame before
   // recomputing baseline gait position and solving this frame's foregrip.
   footIK=new Map();lastFootKey=null;
   leftIK=new Map();
   if(!target||clip==="death"){lastIK={enabled:false,error:Infinity,iterations:0};return lastIK;}
   const co=-Math.cos(angle),si=-Math.sin(angle),dx=target[0]-x,dz=target[2]-z;
-  const goal=[(co*dx+si*dz)/modelScale,(target[1]-footOffset(phase,clip))/modelScale,(-si*dx+co*dz)/modelScale];
+  const goal=[(co*dx+si*dz)/modelScale,(target[1]-y-footOffset(phase,clip))/modelScale,(-si*dx+co*dz)/modelScale];
   const hand=nameToId.get("hand_l"),elbow=nameToId.get("lowerarm_l"),
     shoulder=nameToId.get("upperarm_l"),clavicle=nameToId.get("clavicle_l");
   if([hand,elbow,shoulder,clavicle].some(id=>id===undefined))return lastIK;
@@ -372,11 +372,11 @@ function create(gl,options={}){
   }
   return palettes;
  }
- function jointPoint(name,phase,clip,x,z,angle){
+ function jointPoint(name,phase,clip,x,z,angle,y=0){
   const id=nameToId.get(name);
   if(id===undefined)throw Error("Unknown CC0 joint: "+name);
   const m=matrixAt(id,phase,clip,new Map()),co=-Math.cos(angle),si=-Math.sin(angle);
-  return [x+(m[12]*co-m[14]*si)*modelScale,m[13]*modelScale+footOffset(phase,clip),z+(m[12]*si+m[14]*co)*modelScale];
+  return [x+(m[12]*co-m[14]*si)*modelScale,y+m[13]*modelScale+footOffset(phase,clip),z+(m[12]*si+m[14]*co)*modelScale];
  }
  function handWeaponAxes(phase=0,clip="idle"){
   const id=nameToId.get("hand_r"),index=joints.indexOf(id);
@@ -448,7 +448,7 @@ function create(gl,options={}){
     meanPreSlipMeters:contacts?preSlipTotal/contacts:0,maxPreSlipMeters:preSlipMax,iterations};
   return lastFootLock;
  }
- function render({x,z,angle=0,phase=0,clip="idle",team="german",projection,view,useIK=true}){
+ function render({x,z,y=0,angle=0,phase=0,clip="idle",team="german",projection,view,useIK=true}){
   gl.useProgram(program);
   // IK belongs to the player's actual foregrip, never copy it onto enemy/allied
   // bots sharing this renderer. Quantize/reuse authentic UAL pose matrices for AI.
@@ -459,7 +459,7 @@ function create(gl,options={}){
   gl.uniformMatrix4fv(uni["uBones[0]"],false,baked);
   gl.uniformMatrix4fv(uni.uProjection,false,projection);
   gl.uniformMatrix4fv(uni.uView,false,view);
-  gl.uniform3f(uni.uWorld,x,0,z);
+  gl.uniform3f(uni.uWorld,x,y,z);
   gl.uniform1f(uni.uModelScale,modelScale);
   gl.uniform1f(uni.uFootLift,useIK?footOffset(phase,clip):0);
   // CC0 model faces +Z in its original GLB basis; the FPS world faces -Z at yaw=0.

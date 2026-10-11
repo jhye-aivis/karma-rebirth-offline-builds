@@ -42,12 +42,17 @@ uniform vec3 uFogColor;
 uniform float uTime;
 uniform vec3 uEye;
 uniform sampler2D uShadowMap;
+uniform sampler2D uEnvironmentAlbedo;
+uniform float uEnvironmentReady;
 out vec4 pixel;
 float grain(vec3 p){return fract(sin(dot(floor(p*4.),vec3(127.1,311.7,74.7)))*43758.5453);}
 void main(){
  float f=clamp((vDistance-14.)/65.,0.,.76);
+ // Material ID is packed into the SECOND surface channel by pushBox, leaving
+ // the base metalness intact. No extra vertex attribute/stride or CPU uploads.
+ float materialId=floor(vSurface.y*.5+.001);
  float masonry=1.;
- if(vWorld.y>.25 && abs(vWorld.y)<18.){
+ if(materialId==1. && uEnvironmentReady<.5 && vWorld.y>.25 && abs(vWorld.y)<18.){
    float mortarX=step(.065,fract(vWorld.x*1.55+floor(vWorld.y*1.65)*.5));
    float mortarZ=step(.065,fract(vWorld.z*1.55+floor(vWorld.y*1.65)*.5));
    float mortarY=step(.10,fract(vWorld.y*1.65));
@@ -58,7 +63,7 @@ void main(){
  vec3 V=normalize(uEye-vWorld),H=normalize(L+V);
  float NdotL=max(dot(N,L),0.);
  float roughness=clamp(vSurface.x+noise*.14,.08,.99);
- float metalness=clamp(vSurface.y,0.,1.);
+ float metalness=clamp(vSurface.y-materialId*2.,0.,1.);
  float a=roughness*roughness;
  float NdotH=max(dot(N,H),0.);
  float D=a*a/(3.14159*pow(NdotH*NdotH*(a*a-1.)+1.,2.));
@@ -67,6 +72,20 @@ void main(){
  float G=(NdotL/(NdotL*(1.-k)+k))*(NdotV/(NdotV*(1.-k)+k));
  float VH=max(dot(V,H),0.);
  vec3 albedo=vColor*(masonry*(.96+noise));
+ if(uEnvironmentReady>.5 && materialId>.5){
+   vec3 normalAbs=abs(N);
+   vec2 uvWorld=normalAbs.y>.72?vWorld.xz:normalAbs.x>.72?vWorld.zy:vWorld.xy;
+   // Each 512px tile represents roughly 3.4 meters in world space; atlas
+   // has 3 columns x 2 rows, with edge inset to prevent neighboring bleed.
+   vec2 uvLocal=fract(uvWorld*.294);
+   float tile=materialId-1.;
+   // HTMLImage pixels are uploaded with UNPACK_FLIP_Y_WEBGL: atlas row zero
+   // (top in PNG) therefore lives at texture-space row one.
+   vec2 tilePos=vec2(mod(tile,3.),1.-floor(tile/3.));
+   vec2 uv=(tilePos+mix(vec2(.003),vec2(.997),uvLocal))/vec2(3.,2.);
+   vec3 scanned=texture(uEnvironmentAlbedo,uv).rgb;
+   albedo*=mix(vec3(1.),scanned*1.47,.78);
+ }
  vec3 F0=mix(vec3(.04),albedo,metalness);
  vec3 F=F0+(vec3(1.)-F0)*pow(1.-VH,5.);
  vec3 spec=(D*G*F)/max(4.*NdotL*NdotV,.04);
@@ -92,6 +111,31 @@ const program=gl.createProgram();gl.attachShader(program,shader(gl.VERTEX_SHADER
 if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw new Error(gl.getProgramInfoLog(program));
 const positionLoc=gl.getAttribLocation(program,"aPosition"),colorLoc=gl.getAttribLocation(program,"aColor"),normalLoc=gl.getAttribLocation(program,"aNormal"),surfaceLoc=gl.getAttribLocation(program,"aSurface");
 const uProj=gl.getUniformLocation(program,"uProjection"),uView=gl.getUniformLocation(program,"uView"),uFog=gl.getUniformLocation(program,"uFogColor"),uTime=gl.getUniformLocation(program,"uTime"),uEye=gl.getUniformLocation(program,"uEye"),uLightVP=gl.getUniformLocation(program,"uLightViewProj"),uShadowMap=gl.getUniformLocation(program,"uShadowMap");
+const uEnvAtlas=gl.getUniformLocation(program,"uEnvironmentAlbedo"),uEnvReady=gl.getUniformLocation(program,"uEnvironmentReady");
+const environmentAtlas=gl.createTexture();
+gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,environmentAtlas);
+gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,1,1,0,gl.RGB,gl.UNSIGNED_BYTE,new Uint8Array([150,145,135]));
+gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+gl.activeTexture(gl.TEXTURE0);
+root.KarmaWave21Environment={status:"loading",source:"self-authored procedural tile atlas",materials:6};
+const environmentImage=new Image();
+environmentImage.onload=()=>{
+ gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,environmentAtlas);
+ gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
+ gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,gl.RGB,gl.UNSIGNED_BYTE,environmentImage);
+ gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);
+ gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+ gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+ gl.activeTexture(gl.TEXTURE0);
+ root.KarmaWave21Environment.status="loaded";
+ root.KarmaWave21Environment.width=environmentImage.width;
+ root.KarmaWave21Environment.height=environmentImage.height;
+};
+environmentImage.onerror=()=>{root.KarmaWave21Environment.status="failed";};
+environmentImage.src="assets/environment/wave21_surface_atlas.png";
 const SHADOW_SIZE=1024;
 const shadowVS=`#version 300 es
 precision highp float;
@@ -206,9 +250,12 @@ function bindStaticAttributes(){
 const palette={brick:[.56,.37,.27],stone:[.58,.62,.58],wood:[.46,.33,.23],concrete:[.4,.46,.43],crate:[.55,.42,.27],chimney:[.3,.29,.27],wall:[.45,.47,.39],roof:[.25,.3,.27],ground:[.31,.37,.28],soldier:[.27,.38,.25],target:[.7,.27,.18],german:[.38,.44,.4],soviet:[.45,.33,.26],skin:[.71,.56,.43],helmetAxis:[.24,.29,.27],helmetUSSR:[.3,.32,.26],rifle:[.23,.24,.22],boot:[.18,.19,.17],cloth:[.55,.5,.37],window:[.21,.29,.3],muzzle:[1,.75,.21],shadow:[.09,.11,.08],archRed:[.63,.17,.11],ochre:[.53,.54,.2]};
 Object.assign(palette,{factorywall:[.54,.35,.28],containerRust:[.42,.20,.16],containerBlue:[.32,.39,.39],laneMark:[.87,.81,.54],chimneyStripe:[.9,.86,.78],containerRib:[.32,.35,.33]});
 Object.assign(palette,{drainPipe:[.20,.23,.22],steelLintel:[.35,.36,.34],concreteChip:[.63,.55,.41],roofRust:[.38,.24,.19],rubbleBright:[.54,.50,.41],rubbleDark:[.35,.34,.31],sandstone:[.61,.55,.42],castleShadow:[.22,.22,.19],railSteel:[.33,.34,.32]});
+Object.assign(palette,{flashCore:[1,.96,.64],spark:[1,.72,.24],brass:[.78,.56,.24],dust:[.49,.47,.4],smoke:[.34,.35,.34]});
 const surfaces={brick:[.94,.0],stone:[.96,.0],wood:[.87,.0],concrete:[.92,.0],crate:[.84,.0],chimney:[.67,.12],wall:[.91,.0],roof:[.88,.0],ground:[.99,.0],german:[.85,.0],soviet:[.85,.0],skin:[.76,.0],helmetAxis:[.53,.55],helmetUSSR:[.53,.55],rifle:[.33,.85],boot:[.8,.0],cloth:[.88,.0],window:[.22,.62],muzzle:[.2,.6],shadow:[.99,.0],archRed:[.76,.03],ochre:[.99,.0]};
 Object.assign(surfaces,{factorywall:[.82,.0],containerRust:[.75,.36],containerBlue:[.65,.55],laneMark:[.9,.0],chimneyStripe:[.85,.03],containerRib:[.69,.5]});
 Object.assign(surfaces,{drainPipe:[.57,.63],steelLintel:[.63,.61],concreteChip:[.97,.0],roofRust:[.75,.38],rubbleBright:[.98,.0],rubbleDark:[.95,.0],sandstone:[.93,.0],castleShadow:[.99,.0],railSteel:[.46,.72]});
+const environmentMaterials={brick:1,factorywall:1,concrete:2,wall:2,chimney:2,containerRust:3,containerBlue:3,containerRib:3,roofRust:3,wood:4,crate:4,ground:5,stone:6,sandstone:6};
+Object.assign(surfaces,{flashCore:[.13,.2],spark:[.28,.25],brass:[.32,.74],dust:[.95,0],smoke:[.98,0]});
 function pushBox(out,box){
  const {x,z,w,d,h,material}=box;const y=box.y||0;
  const l=x-w/2,r=x+w/2,near=z-d/2,far=z+d/2,bottom=y,top=y+h;
@@ -225,13 +272,14 @@ function pushBox(out,box){
  const normals=[[0,0,1],[0,0,-1],[-1,0,0],[1,0,0],[0,1,0],[0,-1,0]];
  for(const [index,face] of faces.entries()){
   const points=face.slice(0,4),shade=face[4],order=[0,1,2,0,2,3],normal=normals[index];
-  for(let i of order){const p=points[i];out.push(p[0],p[1],p[2],Math.min(c[0]*shade,1),Math.min(c[1]*shade,1),Math.min(c[2]*shade,1),...normal,...(surfaces[material]||[.8,0]));}
+  for(let i of order){const p=points[i],surface=surfaces[material]||[.8,0];out.push(p[0],p[1],p[2],Math.min(c[0]*shade,1),Math.min(c[1]*shade,1),Math.min(c[2]*shade,1),...normal,surface[0],surface[1]+2*(environmentMaterials[material]||0));}
  }
 }
 function pushCylinder(out,{x,z,radius,height,y,material,segments=10}){
  const color=palette[material]||palette.stone;
  function emit(p,n){
-   out.push(p[0],p[1],p[2],color[0],color[1],color[2],n[0],n[1],n[2],...(surfaces[material]||[.8,0]));
+  const surface=surfaces[material]||[.8,0];
+  out.push(p[0],p[1],p[2],color[0],color[1],color[2],n[0],n[1],n[2],surface[0],surface[1]+2*(environmentMaterials[material]||0));
  }
  for(let k=0;k<segments;k++){
    const a=k*Math.PI*2/segments,b=(k+1)*Math.PI*2/segments;
@@ -244,6 +292,15 @@ function pushCylinder(out,{x,z,radius,height,y,material,segments=10}){
    for(const p of [[x,y+height,z],p2,p3])emit(p,up);
    const down=[0,-1,0];
    for(const p of [[x,y,z],p0,p1])emit(p,down);
+ }
+}
+function pushEnvironmentGeometry(out,item){
+ if(item.shape!=="drum"){pushBox(out,item);return;}
+ // A three-ring industrial steel barrel. Real curved triangles, distinct
+ // damaged paint vs rolled steel rim, not a six-sided colored wall block.
+ pushCylinder(out,{x:item.x,z:item.z,y:item.y||0,radius:item.w*.48,height:item.h,material:"containerRust",segments:18});
+ for(const y of [.11,.78,.96]){
+  pushCylinder(out,{x:item.x,z:item.z,y:(item.y||0)+y,radius:item.w*.51,height:.047,material:"steelLintel",segments:18});
  }
 }
 function pushWarHelmet(out,{x,z,y,team,segments=24}){
@@ -278,7 +335,7 @@ function projection(aspect,fov=1.25,near=.12,far=155){
 }
 function view(p){
  const cy=Math.cos(p.yaw),sy=Math.sin(p.yaw),cp=Math.cos(p.pitch),sp=Math.sin(p.pitch);
- const R=[cy,0,sy],F=[sy*cp,sp,-cy*cp],U=[-sy*sp,cp,cy*sp],eye=[p.x,p.eyeHeight||1.65,p.z];
+ const R=[cy,0,sy],F=[sy*cp,sp,-cy*cp],U=[-sy*sp,cp,cy*sp],eye=[p.x,(p.eyeHeight||1.65)+(p.jumpY||0),p.z];
  function dot(a,b){return a[0]*b[0]+a[1]*b[1]+a[2]*b[2];}
  return new Float32Array([R[0],U[0],-F[0],0,R[1],U[1],-F[1],0,R[2],U[2],-F[2],0,-dot(R,eye),-dot(U,eye),dot(F,eye),1]);
 }
@@ -291,6 +348,9 @@ let gun=PROTOTYPE_WEAPONS.german,ammo=32,spare=160,reload=0,reloadTotal=0,fireCo
 let lastKillEvent=null,impactFX=[],shotMarkers=[];
 const diagnostics=root.KarmaDiagnostics={shots:0,hits:0,blocked:0,damage:0,mode:"client-local-only"};
 const audio=root.KarmaAudio;let sensitivity=2.4,walkCadence=0,previousPlayerHP=100;
+const Jump=root.KarmaJump,weaponFX=root.KarmaWeaponVFX.create(gl);
+root.KarmaWave21VFX=weaponFX;
+root.KarmaWave21Jump={grounded:true,height:0,velocity:0,jumps:0,landings:0};
 const Camera=root.KarmaCamera,cameraButton=document.querySelector("#camera-mode");
 const mouseLockStatus=document.querySelector("#mouse-lock-status");
 const previewMode=new URLSearchParams(window.location.search).get("preview")==="1";
@@ -378,7 +438,7 @@ function updateBenchmark(frameMs,renderMs,aiMs,now){
 }
 function rebuild(){
  const v=[];pushBox(v,{x:0,z:0,w:180,d:180,h:.2,y:-.24,material:"ground"});
- for(const box of map.blocks)pushBox(v,box);
+ for(const box of map.blocks)pushEnvironmentGeometry(v,box);
  worldBuffer=v.length/11;
  gl.bindBuffer(gl.ARRAY_BUFFER,gpu);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(v),gl.DYNAMIC_DRAW);
 }
@@ -429,7 +489,7 @@ function pushHighRigEquipment(world){
    reloadProgress=reload>0&&reloadTotal>0?1-reload/reloadTotal:0;
  const down=(keys.control||keys.c||wave8Pose==="crouch")?.35:0;
  const x=player.x,z=player.z;
- const at=(right,up,front)=>[x+c*right+s*front,up-down,z+s*right-c*front];
+ const at=(right,up,front)=>[x+c*right+s*front,up-down+(player.jumpY||0),z+s*right-c*front];
  const limb=(a,b,r,material)=>pushJointLimb(world,at(...a),at(...b),r,material);
  // Real 64-bone artist CC0 soldier meshes contain jacket, pouches and helmets.
  // Avoid duplicating them with the old large procedural Minecraft-like boxes,
@@ -463,11 +523,11 @@ function pushHighRigEquipment(world){
  const selectedClip=["idle","walk","run","shoot","reload","crouch","death"].includes(wave8Pose)?wave8Pose:clip;
  const posePhase=selectedClip==="shoot"&&!wave8Pose?Math.max(0,.25-shotPoseTimer)*2.5:
    selectedClip==="reload"&&!wave8Pose?Math.max(0,reloadTotal-reload)*.75:playerWalkPhase;
- const wrist=highRig?.jointPoint("hand_r",posePhase,selectedClip,x,z,yaw);
+ const wrist=highRig?.jointPoint("hand_r",posePhase,selectedClip,x,z,yaw,player.jumpY||0);
  // The weapon's trigger receiver is anchored at the REAL glTF hand_r world
  // joint transform, not guessed from the generic player's torso/shoulder.
  const shoulderR=wrist?((wrist[0]-x)*c+(wrist[2]-z)*s):.35;
- const gunY=(wrist?wrist[1]+.035:1.38)-(reload>0?Math.sin(reloadProgress*Math.PI)*.10:0);
+ const gunY=(wrist?wrist[1]+.035:1.38+(player.jumpY||0))-(reload>0?Math.sin(reloadProgress*Math.PI)*.10:0);
  const barrelBaseF=wrist?((wrist[0]-x)*s-(wrist[2]-z)*c)-.38:0;
  const weaponAt=(right,up,front)=>{
   const along=front+barrelBaseF;
@@ -480,7 +540,7 @@ function pushHighRigEquipment(world){
  const handguard=[shoulderR,gunY+.013,(isSidearm?.51:.78)-recoil],
    muzzle=[shoulderR,gunY+.01,(isSidearm?.83:isLong?1.72:isLauncher?1.56:isPPSh?1.46:1.32)-recoil];
  const muzzleWorld=weaponAt(...muzzle);
- const eye=[player.x,player.eyeHeight||1.65,player.z];
+ const eye=[player.x,(player.eyeHeight||1.65)+(player.jumpY||0),player.z];
  const shotSolution=WM.solve(eye,muzzleWorld,player.yaw,player.pitch,Math.min(gun.range,30));
  // Camera-targeted visual alignment: remove the old fixed 30m barrel tracer
  // convergence during third-person play. A ray from the ACTUAL rendered
@@ -554,8 +614,8 @@ function pushHighRigEquipment(world){
    gunY-.10-magMotion.drop*.45,.34);
  const mix=reload>0?Math.sin(Math.PI*Math.min(1,reloadProgress*1.25)):0;
  const grip=foregrip.map((value,i)=>value*(1-mix)+magazine[i]*mix);
- const ik=highRig?.setLeftGrip({target:grip,x,z,angle:yaw,phase:posePhase,clip:selectedClip});
- const solvedHand=highRig?.jointPoint("hand_l",posePhase,selectedClip,x,z,yaw);
+ const ik=highRig?.setLeftGrip({target:grip,x,z,y:player.jumpY||0,angle:yaw,phase:posePhase,clip:selectedClip});
+ const solvedHand=highRig?.jointPoint("hand_l",posePhase,selectedClip,x,z,yaw,player.jumpY||0);
  if(solvedHand&&Math.hypot(...solvedHand.map((v,i)=>v-grip[i]))<.13){
   pushJointLimb(world,solvedHand,[grip[0],grip[1]+.06,grip[2]],.065,"skin");
  }
@@ -588,7 +648,7 @@ function weaponInCamera(world){
  for(const part of parts)pushBox(local,part);
  const c=Math.cos(player.yaw),s=Math.sin(player.yaw);
  for(let i=0;i<local.length;i+=11){
-  const x=local[i]-(aiming?.35:0),z=local[i+2]+recoil,nx=local[i+6],nz=local[i+8];world.push(player.x+x*c-z*s,local[i+1]+wave-reloadDrop+(player.eyeHeight||1.65)-1.65,player.z+x*s+z*c,local[i+3],local[i+4],local[i+5],nx*c-nz*s,local[i+7],nx*s+nz*c);
+  const x=local[i]-(aiming?.35:0),z=local[i+2]+recoil,nx=local[i+6],nz=local[i+8];world.push(player.x+x*c-z*s,local[i+1]+wave-reloadDrop+(player.eyeHeight||1.65)-1.65+(player.jumpY||0),player.z+x*s+z*c,local[i+3],local[i+4],local[i+5],nx*c-nz*s,local[i+7],nx*s+nz*c);
   world.push(local[i+9],local[i+10]);
  }
 }
@@ -600,7 +660,7 @@ function redraw(){
  if(staticSceneMap!==map){
   staticSceneMap=map;staticSceneVertices=[];
   pushBox(staticSceneVertices,{x:0,z:0,w:180,d:180,h:.2,y:-.24,material:"ground"});
-  for(const box of map.blocks)pushBox(staticSceneVertices,box);
+  for(const box of map.blocks)pushEnvironmentGeometry(staticSceneVertices,box);
  }
  const world=staticSceneVertices.slice();
  worldBuffer=world.length/11;
@@ -631,6 +691,7 @@ function redraw(){
     w:dims[0],d:dims[2],h:dims[1],material:"muzzle",solid:false});
   }
  }
+ weaponFX.draw(world,{pushBox,pushJointLimb});
  if(!thirdPerson)weaponInCamera(world);
  sceneVertices=world.length/11;
  // CRITICAL: GPU-skinned pass binds a distinct vertex buffer. The next CPU scene upload
@@ -642,6 +703,7 @@ function redraw(){
 function pick(name){
  map=S.MAPS[name]||S.MAPS.factory;
  mapPicker.value=map.id;const p=map.spawn;player={x:p[0],z:p[2],yaw:map.facing,pitch:0,hp:100,eyeHeight:1.65};
+ Jump.reset(player);
  target=map.targets.map(([x,z])=>({x,z,hp:100}));
  if(map.id==="training")modePicker.value="practice";
  match=modePicker.value==="tdm"?T.create(map,teamPicker.value,3,difficultyPicker.value):null;
@@ -688,7 +750,7 @@ function sightHitsTarget(e){
  const aim=Math.atan2(dx,-dz);
  let diff=Math.atan2(Math.sin(aim-player.yaw),Math.cos(aim-player.yaw));
  if(dist>gun.range)return false;
- const hitY=(player.eyeHeight||1.65)+Math.tan(player.pitch)*dist;
+ const hitY=(player.eyeHeight||1.65)+(player.jumpY||0)+Math.tan(player.pitch)*dist;
  if(thirdPerson&&cameraState){
   const visible=AA.project([cameraState.eye.x,cameraState.eye.y,cameraState.eye.z],
    [cameraState.target.x,cameraState.target.y,cameraState.target.z],
@@ -696,7 +758,7 @@ function sightHitsTarget(e){
   const focal=canvas.clientHeight/(2*Math.tan((aiming?.72:1.25)/2));
   if(!visible.visible||visible.errorPx>Math.max(3,focal*.65/visible.depth))return false;
  }else if(Math.abs(diff)>Math.atan2(.6,dist)||Math.abs(hitY-1.05)>.82)return false;
- const eye=[player.x,player.eyeHeight||1.65,player.z],impact=[e.x,1.1,e.z];
+ const eye=[player.x,(player.eyeHeight||1.65)+(player.jumpY||0),player.z],impact=[e.x,1.1,e.z];
  if(AA.firstSolidHit(map,eye,impact))return false;
  if(thirdPerson&&root.KarmaWave12Aim?.muzzle&&AA.firstSolidHit(map,root.KarmaWave12Aim.muzzle,impact))return false;
  return true;
@@ -707,7 +769,7 @@ function shoot(){
  if(ammo===0){audio.play("dry");doReload();return;}
  ammo--;flash=.12;shotPoseTimer=gun.kind==="sniper"?.36:.25;fireCooldown=gun.rate;
  diagnostics.shots++;
- audio.play("fire");
+ audio.play("fire",gun);
  const recoilImpulse=WM.recoil(gun,aiming,shotSequence++);
  root.KarmaWave13Recoil={id:gun.id,shot:shotSequence,...recoilImpulse};
  // Apply recoil only AFTER hit testing, not before, or center reticle lies.
@@ -719,7 +781,21 @@ function shoot(){
   .map(t=>({...t,width:.8,depth:.7,height:1.75}));
  const trace16=thirdPerson&&cameraState&&!explosive&&!isMelee?
   A14.trace({map,camera:cameraState,muzzle:root.KarmaWave12Aim?.muzzle||
-   [player.x,player.eyeHeight||1.65,player.z],actors:liveActors,maxRange:gun.range}):null;
+   [player.x,(player.eyeHeight||1.65)+(player.jumpY||0),player.z],actors:liveActors,maxRange:gun.range}):null;
+ // Rendered weapon FX uses a real gameplay shot; these particles NEVER
+ // determine collision, victim, damage or result of the hitscan.
+ const fxOrigin=root.KarmaWave12Aim?.muzzle||
+  [player.x+Math.cos(player.yaw)*.38,(player.eyeHeight||1.65)+(player.jumpY||0)-.16,player.z-Math.cos(player.yaw)*.42];
+ const fxDistance=Math.min(gun.range,24);
+ const fxTrace=trace16||A14.trace({map,camera:Camera.compute(map,player,false),muzzle:fxOrigin,actors:liveActors,maxRange:gun.range});
+ const fxImpact=explosive?
+  [player.x+Math.sin(player.yaw)*fxDistance,.4,player.z-Math.cos(player.yaw)*fxDistance]:
+  fxTrace?.gunCover||fxTrace?.cameraPoint||
+  [fxOrigin[0]+Math.sin(player.yaw)*fxDistance,
+   fxOrigin[1]+Math.tan(player.pitch)*fxDistance,
+   fxOrigin[2]-Math.cos(player.yaw)*fxDistance];
+ const hasSurface=explosive||["cover","muzzle-blocked","actor"].includes(fxTrace?.kind);
+ weaponFX.fire({gun,muzzle:fxOrigin,target:fxImpact,yaw:player.yaw,sequence:shotSequence,impactAllowed:hasSurface});
  let traceDamaged=false;
  if(trace16){
   const impact=trace16.gunCover||trace16.cameraPoint;
@@ -819,7 +895,7 @@ function syncKillImpact(){
 }
 function controls(){
  canvas.tabIndex=0;
- document.addEventListener("keydown",ev=>{const k=ev.key.toLowerCase();keys[k]=true;if([" ","arrowup","arrowdown","arrowleft","arrowright"].includes(k))ev.preventDefault();if(k==="q"&&active&&!ev.repeat){ev.preventDefault();togglePerspective();}if(active&&!ev.repeat&&(k==="["||k==="]"))cycleWeapon(k==="]"?1:-1);if(k==="escape")pause();if(k==="r")doReload();});
+ document.addEventListener("keydown",ev=>{const k=ev.key.toLowerCase();keys[k]=true;if([" ","arrowup","arrowdown","arrowleft","arrowright"].includes(k))ev.preventDefault();if((k===" "||ev.code==="Space")&&active&&!ev.repeat)Jump.jump(player);if(k==="q"&&active&&!ev.repeat){ev.preventDefault();togglePerspective();}if(active&&!ev.repeat&&(k==="["||k==="]"))cycleWeapon(k==="]"?1:-1);if(k==="escape")pause();if(k==="r")doReload();});
  document.addEventListener("keyup",ev=>keys[ev.key.toLowerCase()]=false);
  document.addEventListener("mousemove",ev=>{
   if(!active||document.pointerLockElement!==canvas)return;
@@ -864,7 +940,10 @@ function step(dt){
  fireCooldown=Math.max(0,fireCooldown-dt);
  impactFX=impactFX.filter(e=>{e.ttl-=dt;return e.ttl>0;});
  shotMarkers=shotMarkers.filter(e=>{e.ttl-=dt;return e.ttl>0;});
+ weaponFX.step(dt);
  if(!active)return;
+ Jump.step(player,dt);
+ root.KarmaWave21Jump={grounded:player.grounded,height:player.jumpY,velocity:player.jumpVY,jumps:player.jumpCount||0,landings:player.landings||0};
  if(firing)shoot();
  if(match){
   const tAI=performance.now();
@@ -889,7 +968,7 @@ function step(dt){
   const moved=Math.hypot(player.x-priorX,player.z-priorZ);
   playerMoveSpeed=moved/Math.max(dt,.001);
   playerWalkPhase+=dt*(isSprinting?1.7:isCrouching?.65:1);
-  if(moved>.002){walkCadence+=moved;if(walkCadence>(isSprinting?1.7:1.15)){audio.play("step");walkCadence=0;}}
+   if(moved>.002&&player.grounded){walkCadence+=moved;if(walkCadence>(isSprinting?1.7:1.15)){audio.play("step");walkCadence=0;}}
  }else playerMoveSpeed=0;
  if(reload>0){reload-=dt;if(reload<=0){const n=Math.min(gun.mag-ammo,spare);ammo+=n;spare-=n;}}
  if(match){
@@ -956,8 +1035,10 @@ function frame(now){
  }
  gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.viewport(0,0,w,h);
  gl.clearColor(...map.sky,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
- gl.useProgram(program);bindStaticAttributes();gl.uniformMatrix4fv(uProj,false,sceneProjection);gl.uniformMatrix4fv(uView,false,sceneView);gl.uniform3fv(uFog,map.fog);gl.uniform1f(uTime,now/1000);gl.uniform3f(uEye,thirdPerson?cameraState.eye.x:player.x,thirdPerson?cameraState.eye.y:(player.eyeHeight||1.65),thirdPerson?cameraState.eye.z:player.z);
+ gl.useProgram(program);bindStaticAttributes();gl.uniformMatrix4fv(uProj,false,sceneProjection);gl.uniformMatrix4fv(uView,false,sceneView);gl.uniform3fv(uFog,map.fog);gl.uniform1f(uTime,now/1000);gl.uniform3f(uEye,thirdPerson?cameraState.eye.x:player.x,thirdPerson?cameraState.eye.y:(player.eyeHeight||1.65)+(player.jumpY||0),thirdPerson?cameraState.eye.z:player.z);
  gl.uniformMatrix4fv(uLightVP,false,lightVP);gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,shadowTex);gl.uniform1i(uShadowMap,0);
+ gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,environmentAtlas);gl.uniform1i(uEnvAtlas,1);
+ gl.uniform1f(uEnvReady,Number(root.KarmaWave21Environment.status==="loaded"));
  gl.drawArrays(gl.TRIANGLES,0,sceneVertices);
  // Wave20: no more blocky visible bots. Every in-range German/Soviet NPC draws
  // an actual 64-joint creator-derived mesh, with 7k/5k triangle NPC LODs.
@@ -1021,7 +1102,7 @@ function frame(now){
    clip==="reload"&&!wave8Pose?Math.max(0,reloadTotal-reload)*.75:playerWalkPhase;
   const activeRig=wave18AutoLod<2?highRig:legacyRig;
   const footLock=activeRig.setFootLocks?.({x:player.x,z:player.z,angle:player.yaw,phase,clip,
-   enabled:new URLSearchParams(location.search).get("footlock")!=="0"});
+   enabled:player.grounded&&new URLSearchParams(location.search).get("footlock")!=="0"});
   if(footLock?.contacts){
    const tally=root.KarmaWave20FootAudit||(root.KarmaWave20FootAudit={samples:0,contacts:0,preSlipSum:0,postSlipSum:0,maxPreSlip:0,maxPostSlip:0});
    tally.samples++;tally.contacts+=footLock.contacts;
@@ -1032,13 +1113,15 @@ function frame(now){
    tally.preMeanMeters=tally.preSlipSum/tally.contacts;
    tally.postMeanMeters=tally.postSlipSum/tally.contacts;
   }
-  activeRig.render({x:player.x,z:player.z,angle:player.yaw,phase,clip,team:player.team||teamPicker.value,projection:sceneProjection,view:sceneView});
+  activeRig.render({x:player.x,z:player.z,y:player.jumpY||0,angle:player.yaw,phase,clip,team:player.team||teamPicker.value,projection:sceneProjection,view:sceneView});
   root.KarmaWave19Pose={clip,foot:activeRig.getFootContact?.()||null,
     ik:activeRig.getIK?.()||null,feet:activeRig.footPoints?.(phase,clip,player.x,player.z,player.yaw)||null,
     footLock:footLock||null,player:{x:player.x,z:player.z,yaw:player.yaw,moveSpeed:playerMoveSpeed},source:activeRig.source};
   root.KarmaWave20NPC.playerSource=activeRig.source;
  }
  root.KarmaWave18Perf.actorRenderMs=performance.now()-actorStart;
+ root.KarmaWave21VFXPoints=weaponFX.renderGPU(sceneProjection,sceneView);
+ root.KarmaWave21VFXPeakPoints=Math.max(root.KarmaWave21VFXPeakPoints||0,root.KarmaWave21VFXPoints);
  root.KarmaWave18Perf.realBots=artistBots.length;
  root.KarmaWave18Perf.frames++;
  // Sustained >25ms/frame auto-degrades bot draw quality; >34ms also reduces

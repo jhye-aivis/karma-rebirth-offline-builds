@@ -20,10 +20,11 @@ function hits(map,a,b){
 }
 function compute(map,p,third=true,options={}){
  const yaw=p.yaw||0,pitch=clamp(p.pitch||0,-.75,.75),sy=Math.sin(yaw),cy=Math.cos(yaw);
- const center={x:p.x,y:p.eyeHeight||1.65,z:p.z};
+ const rise=p.jumpY||0;
+ const center={x:p.x,y:(p.eyeHeight||1.65)+rise,z:p.z};
  if(!third)return {eye:center,target:{x:p.x+sy*3,y:center.y+Math.tan(pitch)*3,z:p.z-cy*3},distance:0,occluded:false};
  const distance=clamp(options.distance||6.4,2.4,9.5);
- const desired={x:p.x-sy*distance+cy*.95,y:Math.max(1.65,2.25+pitch*1.1),z:p.z+cy*distance+sy*.95};
+ const desired={x:p.x-sy*distance+cy*.95,y:Math.max(1.65,2.25+pitch*1.1)+rise,z:p.z+cy*distance+sy*.95};
  const fraction=hits(map,center,desired),safe=clamp(fraction,0,1);
  const eye={x:center.x+(desired.x-center.x)*safe,y:center.y+(desired.y-center.y)*safe,z:center.z+(desired.z-center.z)*safe};
  // Lock shoulder-camera reticle to the player's *world-space forward ray*.
@@ -41,7 +42,7 @@ function smooth(now,next,dt,reset=false,map=null,player=null){
  // Smoothing a camera behind a new wall can interpolate *through* that wall.
  // Re-run obstruction testing from the current player center after interpolation.
  if(map&&player){
-  const anchor={x:player.x,y:player.eyeHeight||1.65,z:player.z},safe=hits(map,anchor,eye);
+  const anchor={x:player.x,y:(player.eyeHeight||1.65)+(player.jumpY||0),z:player.z},safe=hits(map,anchor,eye);
   if(safe<1)for(const key of ["x","y","z"])eye[key]=anchor[key]+(eye[key]-anchor[key])*safe;
  }
  return {...next,eye,target:{x:blend(now.target.x,next.target.x),y:blend(now.target.y,next.target.y),z:blend(now.target.z,next.target.z)}};

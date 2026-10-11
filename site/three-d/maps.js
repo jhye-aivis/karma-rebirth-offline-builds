@@ -73,6 +73,13 @@
         a.push(b(stack.x+stack.w/2+.055,z,.09,.12,stack.h*.91,"containerRib",false,(stack.y||0)+.1));
       }
     }
+    // Wave21: six independently authored ROUNDED rust drums. A circular mesh
+    // is built at runtime; these are NOT disguised Minecraft-style solid boxes.
+    // Non-colliding only where they hug existing architectural cover so the
+    // established 4v4 paths remain identical and ground navigation is stable.
+    for(const [x,z] of [[-20,-23],[-20,-21.9],[14,8],[15,8.6],[-24,17],[11,-22]]){
+      a.push({...b(x,z,.70,.70,1.02,"containerRust",false,0),shape:"drum"});
+    }
     return {id:"factory",title:"FACTORY",subtitle:"2007 Special Force Factory 자료 참고 · 산업 시설 상세 개선",bounds:28,spawn:[3,0,23],facing:0,sky:[.45,.52,.56],ground:"ground",fog:[.54,.56,.52],blocks:a,targets:[[12,-3],[-15,4],[15,23],[-24,-22]],sourceConfidence:"verified 2007 derivative: stacked shipping containers, chimney, brick warehouse, service alley; additional 2026 drainpipes, freight rails, lintels, trim and rubble independent; original 2002 positions/scale unverified"};
   }
   function castle(){

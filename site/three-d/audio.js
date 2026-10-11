@@ -30,10 +30,26 @@ function create(){
   src.connect(filter);filter.connect(gain);gain.connect(master);
   src.start(now);
  }
- function play(id){
+ function play(id,weapon=null){
   if(!enabled)return;
   switch(id){
-   case "fire":noise(.11,.37,1200);tone(122,.095,"sawtooth",.19,.35);break;
+   case "fire":{
+    // Per-class short synthesized waveforms; stays local/offline and allocation
+    // bounded by each successful shot, never player input repeats.
+    const style={
+     smg:[.075,.27,1280,158,.078,.12],
+     rifle:[.17,.39,820,111,.18,.24],
+     sniper:[.22,.49,660,82,.22,.26],
+     lmg:[.13,.37,920,112,.12,.21],
+     pistol:[.09,.23,1710,208,.083,.11],
+     launcher:[.34,.51,510,58,.29,.27],
+     grenade:[.28,.46,580,69,.22,.27],
+     melee:[.055,.07,950,270,.045,.045]
+    }[weapon?.kind]||[.09,.29,1100,137,.1,.15];
+    noise(style[0],style[1],style[2]);
+    tone(style[3],style[4],"sawtooth",style[5],weapon?.kind==="launcher"?.18:.4);
+    break;
+   }
    case "hit":tone(610,.07,"square",.085,.56);break;
    case "dry":tone(380,.025,"square",.08,.63);break;
    case "reload":tone(680,.04,"triangle",.12,.73);setTimeout(()=>tone(520,.055,"triangle",.13,.67),180);break;

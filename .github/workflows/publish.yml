@@ -46,13 +46,20 @@ jobs:
             if (!$ok) { throw "Windows local HTTP game entry failed" }
             $js = Invoke-WebRequest -Uri "http://127.0.0.1:8877/three-d/engine.js" -UseBasicParsing
             $comparison = Invoke-WebRequest -Uri "http://127.0.0.1:8877/COMPARE_WINDOWS.html" -UseBasicParsing
+            $jump = Invoke-WebRequest -Uri "http://127.0.0.1:8877/three-d/jump.js" -UseBasicParsing
+            $weaponVfx = Invoke-WebRequest -Uri "http://127.0.0.1:8877/three-d/weapon-vfx.js" -UseBasicParsing
+            $surfaceAtlas = Invoke-WebRequest -Uri "http://127.0.0.1:8877/three-d/assets/environment/wave21_surface_atlas.png" -Method Head -UseBasicParsing
             $asset = Invoke-WebRequest -Uri "http://127.0.0.1:8877/three-d/assets/characters/panzergrenadier_cc0.glb" -Method Head -UseBasicParsing
             $germanAI = Invoke-WebRequest -Uri "http://127.0.0.1:8877/three-d/assets/characters/panzergrenadier_cc0_npc_lod.glb" -Method Head -UseBasicParsing
             $opposingAI = Invoke-WebRequest -Uri "http://127.0.0.1:8877/three-d/assets/characters/soviet_side_derived_cc0_interim.glb" -Method Head -UseBasicParsing
             if ($js.StatusCode -ne 200 -or $asset.StatusCode -ne 200) { throw "Game engine or source GLB unavailable" }
             if ($germanAI.StatusCode -ne 200 -or $opposingAI.StatusCode -ne 200) { throw "Source-derived skinned 4v4 NPC rigs unavailable in Windows portable game" }
             if ($comparison.StatusCode -ne 200 -or $comparison.Content -notlike '*Windows Chrome*') { throw "Benchmark HTML unavailable" }
-            Write-Host "WINDOWS SERVER PASS / HTML JS CC0 GERMAN AI + DERIVED SOVIET-SIDE INTERIM GLBs"
+            if ($jump.StatusCode -ne 200 -or $jump.Content -notlike '*KarmaJump*') { throw "Wave21 Space jump JS missing" }
+            if ($weaponVfx.StatusCode -ne 200 -or $weaponVfx.Content -notlike '*KarmaWeaponVFX*') { throw "Wave21 weapon effects JS missing" }
+            if ($surfaceAtlas.StatusCode -ne 200) { throw "Wave21 material texture missing" }
+            if ($response.Content -notlike '*Space*') { throw "Wave21 Space controls not discoverable" }
+            Write-Host "WINDOWS SERVER PASS / SPACE JUMP / WEAPON VFX / ATLAS / CC0 SKINNED AI"
           } finally {
             Stop-Process -Id $server.Id -Force -ErrorAction SilentlyContinue
           }
@@ -85,4 +92,4 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" "KARMA_REBIRTH_${GITHUB_REF_NAME}_Windows_Offline.zip" --title "KARMA REBIRTH $GITHUB_REF_NAME — CC0 German model" --notes "Unofficial WebGL2 FPS game. Genuine creator CC0 Panzergrenadier 64-joint German AI; Soviet-side opponent is a visibly different but German-source-derived INTERIM CC0 skin, NOT a period-authentic Soviet model. MP40/PPSh-shaped AI guns were authored inside this project from simple mechanical shapes, NOT downloaded official historical weapons. No copyrighted KARMA publisher assets included. Windows runner tests HTTP and file serving, not real GPU play."
+          gh release create "$GITHUB_REF_NAME" "KARMA_REBIRTH_${GITHUB_REF_NAME}_Windows_Offline.zip" --title "KARMA REBIRTH $GITHUB_REF_NAME — Space Jump + Weapon VFX" --notes "Unofficial WebGL2 FPS game. Genuine creator CC0 Panzergrenadier 64-joint German AI; Soviet-side opponent is a visibly different but German-source-derived INTERIM CC0 skin, NOT a period-authentic Soviet model. MP40/PPSh-shaped AI guns were authored inside this project from simple mechanical shapes, NOT downloaded official historical weapons. No copyrighted KARMA publisher assets included. Windows runner tests HTTP and file serving, not real GPU play."
