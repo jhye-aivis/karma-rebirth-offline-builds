@@ -1311,5 +1311,68 @@ if(new URLSearchParams(window.location.search).get("wave16Selftest")==="1"){
   report("real Chrome RAF >25 fps",frames/elapsed>25,(frames/elapsed).toFixed(1)+"fps / "+elapsed.toFixed(1)+"s");
  },5500);
 }
+// Wave17: real running game's moving 4v4 bot, not a disconnected damage mock.
+// Activate only via the explicit QA query flag; never modify ordinary matches.
+if(new URLSearchParams(location.search).get("wave17Selftest")==="1"){
+ if(!active){started=true;active=true;menu.hidden=true;}
+ togglePerspective(true);
+ const panel=document.createElement("pre");panel.id="wave17-e2e";
+ panel.style.cssText="position:absolute;top:315px;right:8px;z-index:31;background:#051810ed;color:#d2fbd8;padding:10px;font:11px/1.34 monospace;min-width:330px;pointer-events:none";
+ document.querySelector("#application").appendChild(panel);
+ const checks=[],mark=(name,ok,detail)=>{
+  checks.push({name,ok,detail:String(detail??"")});
+  root.KarmaWave17QA={scene:map.id,checks,pass:checks.filter(x=>x.ok).length,total:checks.length,
+    liveShot:root.KarmaWave16Shot||null,model:root.KarmaWave17Model};
+  panel.textContent="WAVE17 / AUTHENTIC CC0 RIG + LIVE 4V4 DAMAGE\n"+
+   checks.map(c=>(c.ok?"PASS ":"FAIL ")+c.name+" : "+c.detail).join("\n")+
+   "\n"+checks.filter(c=>c.ok).length+"/"+checks.length+" PASS";
+ };
+ setTimeout(()=>{
+  const enemy=match?.bots.find(b=>b.team!==player.team&&b.alive);
+  if(!enemy){mark("actual opponent exists",false,"none");return;}
+  const old={...player};let candidate=null;
+  for(const pitch of [-.12,-.08,-.04])for(let x=-19;x<=19&&!candidate;x+=4)
+  for(let z=-18;z<=18&&!candidate;z+=4){
+   const p={...player,x,z,yaw:0,pitch,eyeHeight:1.65};
+   if(!S.isWalkable(map,x,z))continue;
+   const camera=Camera.compute(map,p,true,{distance:6.4});
+   if(camera.distance<4.5)continue;
+   const a=[camera.eye.x,camera.eye.y,camera.eye.z],b=[camera.target.x,camera.target.y,camera.target.z];
+   const t=(z-8-a[2])/(b[2]-a[2]);
+   if(t<=0)continue;
+   const spot=a.map((v,i)=>v+t*(b[i]-v));
+   if(!S.isWalkable(map,spot[0],spot[2])||spot[1]<.45||spot[1]>1.75)continue;
+   const testBot={...enemy,x:spot[0],z:spot[2],hp:100,alive:true};
+   const probe=A14.trace({map,camera,muzzle:[x+.32,1.35,z-.65],actors:[testBot],maxRange:gun.range});
+   if(probe.kind==="actor")candidate={p,camera,spot};
+  }
+  mark("open real map 8m moving-shot lane",!!candidate,candidate?JSON.stringify(candidate.p.x)+","+candidate.p.z:"unavailable");
+  if(!candidate)return;
+  Object.assign(player,candidate.p);
+  enemy.x=candidate.spot[0];enemy.z=candidate.spot[2];enemy.hp=100;enemy.alive=true;enemy.cooldown=4;
+  cameraState=candidate.camera;redraw();
+  const beforeMovement=[enemy.x,enemy.z];
+  T.update(match,player,.06);
+  const moved=Math.hypot(enemy.x-beforeMovement[0],enemy.z-beforeMovement[1]);
+  cameraState=candidate.camera;redraw();
+  const ray=A14.trace({map,camera:cameraState,muzzle:root.KarmaWave12Aim?.muzzle||[player.x+.32,1.35,player.z-.65],actors:match.bots.filter(b=>b.alive),maxRange:gun.range});
+  mark("actual CPU bot moved during simulation",moved>.0001,moved.toFixed(4)+"m");
+  mark("real camera ray picks live enemy",ray.kind==="actor"&&ray.actor===enemy,ray.kind+" id="+ray.actor?.id);
+  const hp0=enemy.hp,ammo0=ammo,shot0=shotSequence;
+  fireCooldown=0;reload=0;shoot();
+  const hit=root.KarmaWave16Shot;
+  mark("actual trigger ammo & shot",ammo===ammo0-1&&shotSequence===shot0+1,ammo0+"->"+ammo);
+  mark("actual enemy HP reduced",enemy.hp<hp0,hp0+"->"+enemy.hp);
+  mark("actual hit tracks correct live bot",hit?.hit&&hit?.actorId===enemy.id,String(hit?.actorId));
+  mark("real-world impact XYZ",hit?.impact?.length===3,hit?.impact?.map(v=>v.toFixed(3)).join(","));
+  mark("reticle projected ray point <1px",hit?.kind==="actor"&&hit.projectedErrorPx<1,hit?.projectedErrorPx);
+  mark("authentic CC0 64-bone model loaded",root.KarmaWave17Model?.state==="loaded"&&root.KarmaWave17Model?.joints===64,root.KarmaWave17Model?.state);
+  mark("author PBR 5 material sets",root.KarmaWave17Model?.loadedTextures===5,root.KarmaWave17Model?.loadedTextures);
+  const covered=A14.trace({map:{blocks:[{x:0,z:-2,w:4,d:.3,h:3,y:0,solid:true}]},camera:Camera.compute({blocks:[]},{x:0,z:0,yaw:0,pitch:-.08,eyeHeight:1.65},true),muzzle:[.32,1.35,-.65],actors:[{x:0,z:-5,hp:100,height:2}]});
+  mark("3D hard cover blocks projected shot",covered.kind==="cover",covered.kind);
+  root.KarmaWave17QA={...root.KarmaWave17QA,liveShot:hit,movingBotId:enemy.id,hpBefore:hp0,hpAfter:enemy.hp,movedMeters:moved,
+    model:root.KarmaWave17Model,positionBefore:old};
+ },2000);
+}
 requestAnimationFrame(frame);
 })(globalThis);

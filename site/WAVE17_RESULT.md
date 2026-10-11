@@ -1,0 +1,31 @@
+# KARMA REBIRTH Wave17 — 2026-10-11 KST (≤20min bounded work slice)
+
+## Source and genuine historical asset — VERIFIABLE
+- Preserved original c2 `test-fps-1` / `test_fps_1`, previously verified Wave16 release untouched.
+- Original signed-in creator download found **at `~/Downloads/WW2 Panzergrenadier.blend`** 52,897,426 bytes (Zstandard compressed Blender native file), from Britdawgmasterfunk's original CC0 BlendSwap listing https://blendswap.com/blend/31342. No account bypass or extracted login secrets.
+- Official Blender 5.2.2 LTS installed and ACTUALLY opened artist file. Blender source audit `docs/research/wave17/blender-source-audit.json`: 3 meshes, 27,005 triangles, 64 Mixamo joints, 24 packed images, 0 original animations.
+- Blender official glTF exporter ACTUALLY generated `three-d/assets/characters/panzergrenadier_cc0.glb` **43,578,032 bytes**; verified glTF 2.0, 64-joint skin, 3 meshes, 5 materials, 15 embedded images, 27,005 indexed triangles. `docs/research/wave17/panzergrenadier_cc0-audit.json` plus author source/license provenance. Owner original Blender file remains in Downloads; no original 2003 Dragonfly commercial media in public package.
+
+## Actual Quaternius UAL1 -> 64 Mixamo rig retarget/render
+- `scripts/wave17-mixamo-ual-basis.py` calculated actual 52/52 matching bone bind-world rotations using Quaternius CC0 GLB and Blender-exported Mixamo CC0 GLB. Generated `three-d/assets/characters/panzergrenadier-ual-basis.js`. Basis conversion applies `C*qUAL*inverse(C)`, not merely renamed nodes; remaining artist unmapped finger/toe end-joints retain rest behavior.
+- `three-d/real-character.js` extended to import real 43MB GLB binary asynchronously, use actual four-weight GPU LBS skin (64 joints), render author-supplied embedded 5x baseColor/normal/roughness/metal maps (5 material sets), apply world model scaling to existing meters and IK goal conversion. Existing Quaternius remains fallback for unserved `file://` and Soviet.
+- `three-d/engine.js` fetches actual Panzergrenadier GLB, switches live German player to author mesh, renders moving German bots with same real rig/UAL clips, retains generic CC0 Soviet skeleton because licensed period-correct Soviet model still missing. **Weapons MP40/PPSh remain procedural**, true period gun meshes are NOT installed.
+- Real Mac Chrome 3P GUI screenshot: `docs/screenshots/wave17-actual-model.png` or c2 E2E file. Independent Chrome DevTools Protocol software GL output `docs/research/wave17/headless-cdp-qa.json` confirmed source loaded, 64 joints, 52 mapped UAL, 27,005 triangles and 5 ready PBR material sets, no WebGL runtime initialization error. Actual 3P renders visibly different period jacket model and geometry (but authored extra gear persists). No claim of original game likeness.
+- Software SwiftShader headless FPS is poor (~12–23 fps in brief samples, one expected >25 fps condition failed). Mac GUI Chrome real browser screenshots showed vsync ~60 fps in short runs. Never claim universal hardware performance.
+
+## Live battle evidence / limitations
+- `?preview=1&camera=third&wave17Selftest=1&benchmark=1&map=factory&team=german` on actual built WebGL2 used actual TDM 4v4, live CPU `T.update` moving enemy **0.132 m**, actual `shoot()` reduced enemy HP **100→68** and ammo **32→31**. Live shot ID/3D ray/reticle projection recorded. **11/11 Chrome test display PASS** after changing target from static 5m attack radius to 8m movement corridor. Screenshot `docs/screenshots/wave17-factory-live-qa.png`.
+- Cover obstruction tested in real Chrome fixture; 3/5/15/30m reticle collider fixtures previously tested. Dedicated Wave17 Node test verifies **muzzle-only near obstruction** returns `muzzle-blocked` even while camera would otherwise select target. This specific muzzle-only test is a geometry fixture, not a physical manual wall collision or rendered decal pixel proof.
+- The reticle error (~0 px) is **camera-ray projection mathematical result**, NOT real screenshot-detected bullet decal pixel error; instant hitscan no ballistic bullet travel. Real live 8m bot HP change is separately demonstrated.
+
+## Windows / GitHub public deployment
+- Source changed and built in existing c2 only. GitHub **distribution-only** repo `jhye-aivis/karma-rebirth-offline-builds` carries derivative game dist, no research film or original licensed non-CC0 model. `.wave17-publish` temporary Git checkout inside existing project is NOT a newly created c2 project.
+- `.wave17-publish/.github/workflows/publish.yml`: push main -> **Windows-latest PowerShell 5.1 127.0.0.1 server/HTML/JS/authentic GLB smoke**, then GitHub Pages deploy; push tag v* -> same Windows smoke then automatically ZIP and publish release.
+- Actual GitHub Actions Windows smoke job ran on Windows-latest and completed **success** (PowerShell local HTTP serving, HTML/JS/GLB HEAD). This is genuine Windows OS script/server test, **NOT browser WebGL hardware gameplay** or mouse input. Windows end-user GPU test still outstanding.
+- GitHub Pages URL intended and to verify HTTPS status: https://jhye-aivis.github.io/karma-rebirth-offline-builds/ ; direct game path `three-d/index.html`. Do not claim public availability until deployment completed and GET returned 200. Repo https://github.com/jhye-aivis/karma-rebirth-offline-builds.
+- Windows ZIP `releases/KARMA_REBIRTH_Wave17_Windows_Offline.zip`: ZIP source integrity must pass, includes 43MB genuine CC0 skinned German GLB and companion PBR data; launch `PLAY_WINDOWS.bat` with no Python/Node requirements. Confirm actual artifact exists and is published before claiming.
+
+## Gaps / next Wave
+- German Mixamo UAL retarget source-to-target rotation basis calculated and applied, 3D model actually drawn; manual per-clip foot planting, contact, inverse-bind orientation and precise pose quality scoring still required. Original author did not provide animations; **motion is sourced from Quaternius CC0 UAL1**. Do not claim Hollywood-quality motion.
+- Need genuine Soviet period soldier source, accurate MP40/PPSh CC0 or commercial-licensed models, better material color calibration, extra procedural armor/helmet overlay cleanup, 3P muzzle decal pixel measurement, extended human QA, Windows Chrome/Edge actual GPU.
+- Await user after Wave17 closure. Do not autonomously start Wave18.
