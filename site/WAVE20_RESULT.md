@@ -1,7 +1,7 @@
 # KARMA REBIRTH — Wave20 Report (2026-10-11)
 
 ## Scope and invariants
-Continued existing c2 project `test-fps-1` / `test_fps_1` only; Wave19 and earlier releases unchanged. Within one ≤20min Wave20. The actual original German soldier is still the **creator-authorized Britdawgmasterfunk 64-joint Mixamo skinned CC0 Panzergrenadier**, using Quaternius UAL1 52 mapped source bones, its original PBR materials and Wave18 optimized LOD in default fast mode. There is **no real author-supplied German rifle yet**: the MP40 magazine remains independently procedural.
+Continued existing c2 project `test-fps-1` / `test_fps_1` only; Wave19 and earlier releases unchanged. Initial Wave20 stage was ≤20min; subsequent Wave20.2 enhancement has user's explicit up-to-1-hour approval. The actual original German soldier is still the **creator-authorized Britdawgmasterfunk 64-joint Mixamo skinned CC0 Panzergrenadier**, using Quaternius UAL1 52 mapped source bones, its original PBR materials and Wave18 optimized LOD in default fast mode. There is **no author-supplied original historic German firearm yet**; Wave20.2 adds Blender-authored interim gun geometry.
 
 ## REAL WebGL2 Chrome MP4 and actual end-effector measurements
 
@@ -47,6 +47,42 @@ CI public Pages & actual v0.20.0 tagged release should be reported only after Gi
 
 ## Next Wave blockers
 
-- Owner signs into the existing Sketchfab tabs in Mac Chrome and clicks the official downloads for MP40, PPSh. Confirm exact binary + true CC BY assets and embedded texture rights, optimize 4K PBR to <=1K/2K for performance, replace procedural 3D gun with real mesh, retune hands against authentic magazine and grip position (current compact animation is temporary).
+- **Sketchfab abandoned at user's explicit direction** due repeated Epic-account signup authorization loop. DO NOT request another Sketchfab login. Official no-account BlendSwap/OpenGameArt artist assets should be used only after actual binary, author license and texture rights validation. The authored Wave20.2 MP40- and PPSh-shaped interim meshes are not period-exact original-source assets.
 - Find Soviet model with original self-owned redistributable materials and real compatible rig. Ivan currently has third-party textures.com provenance; do not just relabel its author CC BY as a valid license for textures from a separate copyright holder.
 - True two-foot terrain alignment & planted-foot slip QA, video frame alignment and extended hardware performance Windows user A/B data from `COMPARE_WINDOWS.bat`.
+
+## FINAL VERIFIED STATUS — 2026-10-11 17:10 KST
+- Forced clean `check` PASS, Node **99/99 PASS**, build PASS, existing c2 secret scan PASS (its 0 Git-dirty count is not comprehensive security certification).
+- Chrome software WebGL2 Factory 3P walk & shoot 4v4 **11/11 PASS** each after final rig amendment, ~25.2/25.7 FPS in separate quick samples; this is NOT user Windows GPU.
+- 6 creator-model Chrome MP4 before/after + 3 cropped left-before/right-after comparisons + 1 actual live-reload MP4 all generated and ffmpeg encoded; 16 video frames each for ~3.2sec and machine-readable 3D joint error measurements in `docs/research/wave20`.
+- Local Wave20 ZIP integrity PASS, contains four motion MP4s and prior Windows comparator, original licensed skinned 64-joint Panzergrenadier; no new unlicensed external firearms/Soviet models.
+- Public GitHub `v0.20.0` main Windows GitHub Actions smoke + Pages deploy **SUCCESS**; tag Windows smoke + automatic release **SUCCESS**. Actual release asset `KARMA_REBIRTH_v0.20.0_Windows_Offline.zip` **59,952,211 bytes**, nondraft. Windows automated HTTP/source loading passes; personal Windows GPU playing not evaluated. Release: https://github.com/jhye-aivis/karma-rebirth-offline-builds/releases/tag/v0.20.0 .
+- Official Sketchfab Mac Chrome pages all opened but current account screen displayed SIGN UP: logged-out, real binaries not acquired, rights unchanged.
+
+## WAVE20.2 NPC art upgrade — 2026-10-11 late evening (user-authorized ≤1 hour)
+
+**Problem proven in source:** Wave18 fast mode condition `wave18Quality!=="fast"` prevented source-author skinned German AI in ALL frames; Soviet AI always used generic Quaternius fallback. Therefore player could wear a creator PBR model but all visible computer opponents were Minecraft-like low-poly boxes.
+
+**Real creator-original CC0 source-backed model, not a fake claim:**
+
+| Actor side | New actual GPU-skinned GLB | Actual indexed triangles | Original rig | Materials |
+| --- | --- | ---: | --- | --- |
+| German NPC | `three-d/assets/characters/panzergrenadier_cc0_npc_lod.glb` | 7,569 | Britdawgmasterfunk CC0 64-bone Mixamo | Source PBR textures downsampled to 384px |
+| Opposing Soviet faction **interim** | `three-d/assets/characters/soviet_side_derived_cc0_interim.glb` | 5,585 | **Same German CC0 source** 64-bone Mixamo reworked, **NOT** authentic period Soviet model | Derived olive cloth, cap, source-authored cloth texture |
+
+- Actual Blender 5.2.2 opens original signed-in author's `~/Downloads/WW2 Panzergrenadier.blend` (52,897,426 bytes) and decimates to NPC LOD, packs real original material textures. Derivative does NOT modify source Blender file. Script `scripts/wave20-cc0-npc-lods.py`; audit `docs/research/wave20/npc-lods.json`, standalone creator license `three-d/assets/characters/LICENSE_WAVE20_NPC_CC0.txt`.
+- For **Soviet-side stand-in only**, Blender removes source German M42 combat helmet and German ammo pouches, re-tints source cloth, makes a small olive field cap attached to artist HEAD bone; it is intentionally provisional because legitimate independent original USSR model hasn't been downloaded. Users must not interpret costume as confirmed 1944 USSR historical uniform.
+- Built new **independently modeled** modest polygon MP40-inspired stick-mag folding-stock and PPSh-inspired wood-stock drum-mag 3D silhouette *within project Blender*, weighted to source Mixamo RightHand (not downloaded 4K real firearms). It has true 3D receiver/barrel/sights/stock/magazine, source-local shader material; right wrist orientation corrected with world axes measured from **actual Chrome loaded source bone skin** (idle/walk/shoot). This resolves the initial vertical rifle problem in preview but is NOT scanned or third-party licensed original historic weapons. No Sketchfab account or content used.
+- Renderer: `three-d/engine.js` now loads BOTH real GLBs by author source; draws each visible 4v4 NPC in German/Soviet skin rig, high detail only near player; frustum and solid wall occlusion culling, artist LOD per team, fallback explicitly available `?npc=legacy`. The actual AI battle movement/shots remains CPU-side and unchanged. 3P player switches to correct live faction rig once GLBs load. Removes duplicate block-shaped procedural fake helmet/backpack when original artist mesh already contains its own outfit, preserving gun and 5mm wrist / foot IK.
+- Fast quality starts at internal scale 0.68; raises resolution gradually up to 0.93 on sustained 58.2+fps hardware vs prior permanently pixellated 0.65. Weak/software GPUs remain on cheap scale. This is dynamic resolution, not promise of 60fps on user Windows.
+- `three-d/real-character.js` GLSL supports true textured PBR clothing and GLTF solid author colors for two handmade cap parts and true artist source 64-joint weighted simulated right-hand firearms. NPC player left-hand IK and foot IK are isolated between actors so player pose cannot contaminate NPCs.
+
+**Real Chrome evidence (not third-party catalog imagery):**
+
+- Mac GUI Chrome Factory German normal first-person/3P screenshot labels actual CC0 soldier NPCs, near-showcase screenshot `docs/screenshots/wave20-ai-artist-public.png` is **explicitly staged AI visual QA only**, not an ordinary gameplay spawn; native short Chrome FPS ~60 average (~55fps 1% low), ~3ms CPU render. Mac Castle Soviet visual screenshot remains available for comparing factioned art.
+- Software-rendering **headless Chrome SwiftShader** run `scripts/wave20-npc-chrome-ab.mjs` serially checks Factory and Castle; `docs/research/wave20/npc-chrome-ab.json`. Example factory scene German side 2 and Soviet side 2 source-derived meshes simultaneously rendered in actual WebGL2 and complete PBR, no runtime errors. Older simple Quaternius fallback ~21.2fps vs new detailed 4-bot scene ~18.4fps in that *software* environment: about 13% slower. This is a real GPU cost in CPU software mode; **not** the user's actual Windows hardware. Rendering on native Mac GPU ~60 short sample, no long gameplay or Windows claim. Automated battle `scripts/wave20-npc-combat-cdp.mjs` ran actual 4v4 moving AI hit HP reduction **11/11 PASS**, software Chrome FPS ~22.4.
+- Source/rights/bin/performance checks in `tests/wave20-npc.test.mjs`: validates both real GLBs true 64-bone skin, true indexed triangles, actual source materials, authored gun GLTF skinned node, at least one simultaneous German & Soviet actor in real Chrome screenshots, explicit not-authentic Soviet origin. Existing hand grip below 5mm (on 15-16 loaded samples per walk/shoot/reload), live magazine swap, and planted-foot contact regression tests maintained.
+
+**Unfinished external model work:** neither legally redistributable independent WWII Soviet original rig nor genuine artist-source MP40/PPSh 3D original binaries yet. Avoid Sketchfab per user decision. Existing game has genuine CC0 author-origin German meshes and **original-project gun approximations**; do not claim historical visual reproduction of game publisher assets. Remaining architecture, crates and lighting still low-poly/period-inspired so the entire game does NOT yet resemble a modern AAA production.
+
+**Publishing:** Wave20.2 stage must run full Node/check/build/secret scan, Windows CI+Pages, verified nondraft GitHub new tag and ZIP; prior v0.20.0 release remains untouched.

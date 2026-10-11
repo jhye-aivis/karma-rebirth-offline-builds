@@ -138,16 +138,42 @@ const nearShadow=.1,farShadow=140,spreadShadow=49;
 const shadowOrtho=new Float32Array([1/spreadShadow,0,0,0,0,1/spreadShadow,0,0,0,0,-2/(farShadow-nearShadow),0,0,0,-(farShadow+nearShadow)/(farShadow-nearShadow),1]);
 const lightVP=multiplyMat4(shadowOrtho,lookAt([42,58,36],[0,0,0]));
 const skinned=root.KarmaSkinned.create(gl);
-let highRig=null,legacyRig=null,germanRig=null;
+let highRig=null,legacyRig=null,germanRig=null,npcGermanRig=null,npcSovietRig=null;
 const qualityChoice=new URLSearchParams(location.search).get("quality");
 const wave18Quality=["original","balanced","fast","legacy"].includes(qualityChoice)?qualityChoice:"fast";
+const wave20NPCChoice=new URLSearchParams(location.search).get("npc")==="legacy"?"legacy":"artist";
 let wave18AutoLod=0;
+let wave20DynamicScale=.68;
 root.KarmaWave18Perf={quality:wave18Quality,autoLod:0,fullBytes:43578032,lodBytes:11607272,source:"author's licensed CC0 Panzergrenadier",frames:0,actorRenderMs:0,realBots:0};
 try{highRig=root.KarmaHighRig?.create(gl)||null;}catch(error){console.warn("CC0 glTF renderer not available; retain CPU-rig fallback",error);}
 legacyRig=highRig;
 // Official creator CC0 64-joint Panzergrenadier, loaded from a real GLB when
 // served over localhost/Pages. Legacy Quaternius is retained as 100% offline fallback.
 root.KarmaWave17Model={state:"loading",author:"Britdawgmasterfunk",source:"https://blendswap.com/blend/31342",replaced:false};
+// All visible combatants now receive *genuine licensed skinned artist geometry*.
+// Soviet-side outfit is explicitly a recolored/restyled stand-in derived from
+// the German CC0 source, NOT an original period-correct Soviet soldier.
+root.KarmaWave20NPC={state:"loading",germanSource:"Britdawgmasterfunk CC0 Panzergrenadier",sovietSource:"CC0 German-derived interim Soviet-side stand-in (not historic Soviet model)",artistBots:0,german:0,soviet:0,fallback:0};
+async function loadWave20NPC(path,key){
+ const response=await fetch("assets/characters/"+path);
+ if(!response.ok)throw Error(path+" HTTP "+response.status);
+ const buffer=await response.arrayBuffer();
+ const rig=root.KarmaHighRig.create(gl,{raw:buffer});
+ if(!rig.period||rig.joints!==64||rig.ualBones!==52)throw Error(path+" actual skinned Mixamo joint validation failed");
+ root.KarmaWave20NPC[key]={triangles:rig.triangles,bytes:buffer.byteLength,source:rig.source};
+ return rig;
+}
+if(location.protocol!=="file:"&&wave18Quality!=="legacy"&&wave20NPCChoice!=="legacy"){
+ Promise.all([
+  loadWave20NPC("panzergrenadier_cc0_npc_lod.glb","germanLOD"),
+  loadWave20NPC("soviet_side_derived_cc0_interim.glb","sovietInterim")
+ ]).then(([german,soviet])=>{
+   npcGermanRig=german;npcSovietRig=soviet;
+   root.KarmaWave20NPCAxes={idle:german.handWeaponAxes(0,"idle"),walk:german.handWeaponAxes(1.2,"walk"),shoot:german.handWeaponAxes(.2,"shoot")};
+   if((player.team||teamPicker.value)==="soviet")highRig=soviet;
+   root.KarmaWave20NPC.state="loaded";
+ }).catch(error=>{root.KarmaWave20NPC.state="failed";root.KarmaWave20NPC.error=String(error);console.warn("Artist NPC rig fallback",error);});
+}
 if(location.protocol!=="file:"&&wave18Quality!=="legacy"){
  const isFull=wave18Quality==="original";
  const loadStart=performance.now();
@@ -405,6 +431,10 @@ function pushHighRigEquipment(world){
  const x=player.x,z=player.z;
  const at=(right,up,front)=>[x+c*right+s*front,up-down,z+s*right-c*front];
  const limb=(a,b,r,material)=>pushJointLimb(world,at(...a),at(...b),r,material);
+ // Real 64-bone artist CC0 soldier meshes contain jacket, pouches and helmets.
+ // Avoid duplicating them with the old large procedural Minecraft-like boxes,
+ // but keep the gun/foregrip IK below so shoot + reload still work.
+ if(!highRig?.period){
  // Rounded crown and lip, chin strap and cloth collar.
  pushWarHelmet(world,{x,z,y:1.73-down,team:body});
  limb([-.13,1.74,0],[-.13,1.43,.09],.025,"wood");
@@ -415,6 +445,7 @@ function pushHighRigEquipment(world){
  limb([-.24,1.39,.04],[.15,.99,.17],.026,"cloth");
  limb([.23,1.38,.03],[-.14,1.01,.17],.025,"cloth");
  for(const offset of [-.19,0,.19])pushBox(world,{x:x+c*offset+s*.2,z:z+s*offset-c*.2,w:.115,d:.14,h:.19,y:.97-down,material:"wood"});
+ }
  // Mode-dependent long-gun pivot, recoil and magazine animation.
  const firingPose=(shotPoseTimer>0||wave8Pose==="shoot");
  const recoil=firingPose?(wave8Pose==="shoot"?.09:(WM.recoil(gun,aiming,Math.max(0,shotSequence-1)).kickMeters*Math.min(1,flash/.11))):0;
@@ -515,7 +546,12 @@ function pushHighRigEquipment(world){
  // Wave11: solve actual left forearm/upper-arm skinning quaternions to put the
  // model's REAL left hand on the foregrip. During reload it moves to magazine.
  const foregrip=weaponAt(shoulderR-.32,gunY+.08,.42);
- const magazine=weaponAt(shoulderR-.36+magMotion.side,gunY-.14-magMotion.drop,.30);
+ // Live magazine-swap phase originally put the left-hand target nearly 0.5m
+ // from the shoulder (outside natural forearm reach), causing a 13.3mm spike
+ // even with 16 CCD iterations. Guide the hand to the reachable magazine neck;
+ // the mag mesh can continue to drop independently during swap.
+ const magazine=weaponAt(shoulderR-.265+magMotion.side*.6,
+   gunY-.10-magMotion.drop*.45,.34);
  const mix=reload>0?Math.sin(Math.PI*Math.min(1,reloadProgress*1.25)):0;
  const grip=foregrip.map((value,i)=>value*(1-mix)+magazine[i]*mix);
  const ik=highRig?.setLeftGrip({target:grip,x,z,angle:yaw,phase:posePhase,clip:selectedClip});
@@ -610,7 +646,7 @@ function pick(name){
  if(map.id==="training")modePicker.value="practice";
  match=modePicker.value==="tdm"?T.create(map,teamPicker.value,3,difficultyPicker.value):null;
  if(match){player={...player,x:match.playerSpawn.x,z:match.playerSpawn.z,team:match.playerTeam,id:"player",kills:0,deaths:0};}
- highRig=player.team==="german"&&germanRig?germanRig:legacyRig;
+ highRig=player.team==="german"?(germanRig||npcGermanRig||legacyRig):(npcSovietRig||legacyRig);
  if(!weaponPicker.options.length||ARM.weapons[weaponPicker.value]?.team!==teamPicker.value)loadoutForTeam(teamPicker.value);
  equipWeapon(weaponPicker.value);
  aiming=false;kills=0;time=180;lastKillEvent=null;impactFX=[];shotMarkers=[];previousPlayerHP=100;
@@ -890,9 +926,16 @@ function frame(now){
     targets:AA.report(map,player,cam,muzzle,canvas.clientWidth,canvas.clientHeight,aiming?.72:1.25,[3,5,15,30])};
   }
  }
+ // Automatic anti-pixelation: keep light rendering on CPU/weak GPUs, improve
+ // resolution on real GPUs that sustain a 60fps budget for several seconds.
+ if(wave18Quality==="fast"&&sampleFrames.length>=90&&root.KarmaWave18Perf.frames%160===0){
+  const recent=sampleFrames.slice(-90),mean=recent.reduce((sum,v)=>sum+v,0)/recent.length,fps=1000/mean;
+  if(fps>=58.2)wave20DynamicScale=Math.min(.93,+(wave20DynamicScale+.085).toFixed(3));
+  else if(fps<46)wave20DynamicScale=Math.max(.68,+(wave20DynamicScale-.12).toFixed(3));
+ }
  const renderScale=new URLSearchParams(location.search).has("scale")?
   Math.max(.5,Math.min(1,Number(new URLSearchParams(location.search).get("scale"))||.8)):
-  wave18Quality==="original"?1:wave18Quality==="fast"?.65:wave18AutoLod>=1?.65:.8;
+  wave18Quality==="original"?1:wave18Quality==="fast"?wave20DynamicScale:wave18AutoLod>=1?.68:.8;
  root.KarmaWave18Perf.renderScale=renderScale;
  const w=Math.max(1,Math.floor(canvas.clientWidth*Math.min(2,devicePixelRatio||1)*renderScale)),h=Math.max(1,Math.floor(canvas.clientHeight*Math.min(2,devicePixelRatio||1)*renderScale));
  if(w!==canvas.width||h!==canvas.height){canvas.width=w;canvas.height=h;gl.viewport(0,0,w,h);}
@@ -916,40 +959,87 @@ function frame(now){
  gl.useProgram(program);bindStaticAttributes();gl.uniformMatrix4fv(uProj,false,sceneProjection);gl.uniformMatrix4fv(uView,false,sceneView);gl.uniform3fv(uFog,map.fog);gl.uniform1f(uTime,now/1000);gl.uniform3f(uEye,thirdPerson?cameraState.eye.x:player.x,thirdPerson?cameraState.eye.y:(player.eyeHeight||1.65),thirdPerson?cameraState.eye.z:player.z);
  gl.uniformMatrix4fv(uLightVP,false,lightVP);gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,shadowTex);gl.uniform1i(uShadowMap,0);
  gl.drawArrays(gl.TRIANGLES,0,sceneVertices);
- // Wave18 LOD: only nearby, camera-visible German AI use the authentic skinned
- // artist mesh. All distant/off-camera soldiers still appear via cheap GPU skin.
- const actorStart=performance.now(),fullBots=[];
- if(match&&germanRig&&!skinCheck&&wave18Quality!=="fast"&&wave18AutoLod<1){
+ // Wave20: no more blocky visible bots. Every in-range German/Soviet NPC draws
+ // an actual 64-joint creator-derived mesh, with 7k/5k triangle NPC LODs.
+ // In fast mode only up to one nearest visible German NPC uses the 16k hero mesh.
+ const actorStart=performance.now(),artistBots=[],fallbackBots=[],ranked=[];
+ const heroMax=wave18Quality==="original"?7:wave18Quality==="balanced"?2:wave18Quality==="fast"?1:0;
+ if(match&&!skinCheck&&wave20NPCChoice!=="legacy"){
   for(const bot of match.bots){
-   if(bot.team!=="german"||!bot.alive)continue;
+   if(!bot.alive)continue;
    const dx=bot.x-player.x,dz=bot.z-player.z,dist=Math.hypot(dx,dz);
    const forward=dx*Math.sin(player.yaw)-dz*Math.cos(player.yaw);
-   if(wave18Quality==="original"||(dist<12&&forward>-3)){
-    if(!thirdPerson&&dist<2.9)continue;
-    fullBots.push(bot);
-   }
+   const lateral=Math.abs(dx*Math.cos(player.yaw)+dz*Math.sin(player.yaw));
+   const aspect=Math.max(.8,canvas.clientWidth/Math.max(1,canvas.clientHeight));
+   const halfHorizontalTan=Math.tan((aiming?.72:1.25)/2)*aspect;
+   const cameraForward=forward+(thirdPerson?cameraDistance:0);
+   // Use the actual perspective cone + generous body margin rather than
+   // submitting unseen PBR skinned soldiers far outside either screen edge.
+   if(dist>52||forward < -6||lateral>Math.max(3.5,cameraForward*halfHorizontalTan+2.5))continue;
+   // Solid-world occlusion: hidden opponents still receive REAL AI logic but
+   // cost no fragment shading behind a wall (close 11m actors not culled).
+   if(dist>11&&!T.canSee(map,player,bot))continue;
+   ranked.push({bot,dist});
   }
  }
- const highBotIds=new Set(fullBots.map(b=>b.id));
- if(match&&!skinDisabled)skinned.render(skinCheck?[{id:99,team:"german",x:player.x,z:player.z-12,angle:0,anim:1.3,alive:true,speed:1}]:
-   match.bots.filter(b=>!highBotIds.has(b.id)),{projection:sceneProjection,view:sceneView},lightVP,shadowTex,false,thirdPerson?null:player);
- for(const bot of fullBots){
-  const clip=bot.shotTimer>0?"shoot":bot.reloading?"reload":bot.speed>3?"run":bot.speed>.1?"walk":"idle";
-  germanRig.render({x:bot.x,z:bot.z,angle:bot.angle||0,phase:bot.anim||0,clip,
-   team:"german",projection:sceneProjection,view:sceneView,useIK:false});
+ ranked.sort((a,b)=>a.dist-b.dist);
+ let nearGerman=0;
+ for(const {bot,dist} of ranked){
+  let rig=null,level="fallback";
+  if(bot.team==="soviet"&&npcSovietRig){rig=npcSovietRig;level="interim-soviet-derived";}
+  else if(bot.team==="german"&&npcGermanRig){
+   const hero=!!germanRig&&nearGerman<heroMax&&dist<(wave18Quality==="original"?50:wave18Quality==="balanced"?18:12)&&wave18AutoLod<2;
+   rig=hero?germanRig:npcGermanRig;level=hero?"german-hero":"german-npc-lod";
+   if(hero)nearGerman++;
+  }
+  if(rig)artistBots.push({bot,rig,dist,level});
+  else fallbackBots.push(bot);
  }
+ // All in-range artist bots are excluded from the generic Quaternius pass.
+ // If original binary loading fails, gameplay remains usable in legacy mode.
+ const highBotIds=new Set(artistBots.map(item=>item.bot.id));
+ if(match&&!skinDisabled)skinned.render(skinCheck?[{id:99,team:"german",x:player.x,z:player.z-12,angle:0,anim:1.3,alive:true,speed:1}]:
+   fallbackBots,{projection:sceneProjection,view:sceneView},lightVP,shadowTex,false,thirdPerson?null:player);
+ for(const {bot,rig} of artistBots){
+  const clip=bot.shotTimer>0?"shoot":bot.reloading?"reload":bot.speed>3?"run":bot.speed>.1?"walk":"idle";
+  rig.render({x:bot.x,z:bot.z,angle:bot.angle||0,phase:bot.anim||0,clip,
+   team:bot.team,projection:sceneProjection,view:sceneView,useIK:false});
+ }
+ root.KarmaWave20NPC.artistBots=artistBots.length;
+ root.KarmaWave20NPC.german=artistBots.filter(b=>b.bot.team==="german").length;
+ root.KarmaWave20NPC.soviet=artistBots.filter(b=>b.bot.team==="soviet").length;
+ root.KarmaWave20NPC.fallback=fallbackBots.length;
+ root.KarmaWave20NPC.visible=ranked.length;
+ // Match faction is authoritative after the start menu / async GLB load.
+ if(player.team==="soviet"&&npcSovietRig)highRig=npcSovietRig;
+ else if(player.team==="german"&&germanRig)highRig=germanRig;
+ else if(player.team==="german"&&npcGermanRig)highRig=npcGermanRig;
  if(thirdPerson&&(wave18AutoLod<2?highRig:legacyRig)){
   const drivenClip=player.hp<=0?"death":reload>0?"reload":shotPoseTimer>0?"shoot":keys.control||keys.c?"crouch":playerMoveSpeed>3?"run":playerMoveSpeed>.12?"walk":"idle";
   const clip=["idle","walk","run","shoot","reload","crouch","death"].includes(wave8Pose)?wave8Pose:drivenClip;
   const phase=clip==="shoot"&&!wave8Pose?Math.max(0,.25-shotPoseTimer)*2.5:
    clip==="reload"&&!wave8Pose?Math.max(0,reloadTotal-reload)*.75:playerWalkPhase;
   const activeRig=wave18AutoLod<2?highRig:legacyRig;
+  const footLock=activeRig.setFootLocks?.({x:player.x,z:player.z,angle:player.yaw,phase,clip,
+   enabled:new URLSearchParams(location.search).get("footlock")!=="0"});
+  if(footLock?.contacts){
+   const tally=root.KarmaWave20FootAudit||(root.KarmaWave20FootAudit={samples:0,contacts:0,preSlipSum:0,postSlipSum:0,maxPreSlip:0,maxPostSlip:0});
+   tally.samples++;tally.contacts+=footLock.contacts;
+   tally.preSlipSum+=footLock.meanPreSlipMeters*footLock.contacts;
+   tally.postSlipSum+=footLock.meanSlipMeters*footLock.contacts;
+   tally.maxPreSlip=Math.max(tally.maxPreSlip,footLock.maxPreSlipMeters);
+   tally.maxPostSlip=Math.max(tally.maxPostSlip,footLock.maxSlipMeters);
+   tally.preMeanMeters=tally.preSlipSum/tally.contacts;
+   tally.postMeanMeters=tally.postSlipSum/tally.contacts;
+  }
   activeRig.render({x:player.x,z:player.z,angle:player.yaw,phase,clip,team:player.team||teamPicker.value,projection:sceneProjection,view:sceneView});
   root.KarmaWave19Pose={clip,foot:activeRig.getFootContact?.()||null,
-    ik:activeRig.getIK?.()||null,source:activeRig.source};
+    ik:activeRig.getIK?.()||null,feet:activeRig.footPoints?.(phase,clip,player.x,player.z,player.yaw)||null,
+    footLock:footLock||null,player:{x:player.x,z:player.z,yaw:player.yaw,moveSpeed:playerMoveSpeed},source:activeRig.source};
+  root.KarmaWave20NPC.playerSource=activeRig.source;
  }
  root.KarmaWave18Perf.actorRenderMs=performance.now()-actorStart;
- root.KarmaWave18Perf.realBots=fullBots.length;
+ root.KarmaWave18Perf.realBots=artistBots.length;
  root.KarmaWave18Perf.frames++;
  // Sustained >25ms/frame auto-degrades bot draw quality; >34ms also reduces
  // player visual complexity. Keep published telemetry explicit and overrideable.
@@ -967,6 +1057,26 @@ const requestedTeam=new URLSearchParams(window.location.search).get("team");
 if(["german","soviet"].includes(requestedTeam))teamPicker.value=requestedTeam;
 pick(new URLSearchParams(window.location.search).get("map")||"factory");
 togglePerspective(new URLSearchParams(window.location.search).get("camera")==="third");
+// Explicit screenshot/asset QA staging ONLY. Regular 4v4 games never move bots
+// to showcase positions; this preview illustrates geometry close enough to
+// inspect the licensed materials and distinctive not-historic Soviet cap.
+if(new URLSearchParams(location.search).get("npcShowcase")==="1"&&
+   new URLSearchParams(location.search).get("preview")==="1"&&match){
+ const offsets=[[-1.9,4.5],[1.9,4.5],[-3.3,8],[3.3,8],[-1.5,13],[1.5,13],[0,18]];
+ let n=0;
+ for(const bot of match.bots){
+  for(let k=n;k<offsets.length;k++){
+   const [side,front]=offsets[k],x=player.x+side*Math.cos(player.yaw)+front*Math.sin(player.yaw),
+     z=player.z+side*Math.sin(player.yaw)-front*Math.cos(player.yaw);
+   if(!S.isWalkable(map,x,z)||!T.canSee(map,player,{x,z}))continue;
+   bot.x=x;bot.z=z;bot.cooldown=999;bot.reloading=0;bot.path=[];
+   n=k+1;break;
+  }
+ }
+ const stamp=document.querySelector(".survey-stamp");
+ if(stamp)stamp.textContent+=" · STAGED AI VISUAL QA ONLY";
+ root.KarmaWave20NPC.showcase=true;
+}
 updateMouseLock();
 menu.scrollTop=0;
 controls();

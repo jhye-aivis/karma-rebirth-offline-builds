@@ -131,7 +131,7 @@ function create(gl,options={}){
  uniform sampler2D uFabricAlbedo;uniform sampler2D uFabricNormal;uniform sampler2D uFabricORM;
  uniform float uFabricReady;uniform float uPhotoReady;
   uniform sampler2D uArtistAlbedo;uniform sampler2D uArtistNormal;uniform sampler2D uArtistMR;
-  uniform float uArtistReady;
+ uniform float uArtistReady;uniform float uArtistSolid;uniform vec3 uArtistSolidColor;
  out vec4 color;
  void main(){
   vec3 sampledNormal=texture(uFabricNormal,vUV*4.).rgb*2.-1.;
@@ -154,6 +154,12 @@ function create(gl,options={}){
   vec3 epidermis=vec3(.62,.46,.33);
   vec3 albedo=mix(cloth,epidermis,skin);
   albedo=mix(albedo,vec3(.13,.14,.12),boot);
+  // Authored CC0 derivative headgear has solid-color PBR materials, not
+  // texture atlases. Retain its real material color instead of procedural skin.
+  if(uArtistSolid>.5){
+   vec3 shade=uArtistSolidColor*(.30+.70*max(dot(normalize(vNormal),l),0.));
+   color=vec4(pow(shade,vec3(.88)),1.);return;
+  }
   // Source-authored high-resolution CC0 uniform/helmet/gear PBR, not procedural cloth.
   if(uArtistReady>.5){
    vec3 srcAlbedo=texture(uArtistAlbedo,vUV).rgb;
@@ -181,7 +187,7 @@ function create(gl,options={}){
  function shader(kind,s){const o=gl.createShader(kind);gl.shaderSource(o,s);gl.compileShader(o);if(!gl.getShaderParameter(o,gl.COMPILE_STATUS))throw Error("CC0 rig shader "+gl.getShaderInfoLog(o));return o;}
  const program=gl.createProgram();gl.attachShader(program,shader(gl.VERTEX_SHADER,vs));gl.attachShader(program,shader(gl.FRAGMENT_SHADER,fs));gl.linkProgram(program);if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(program));
  const attrs={position:gl.getAttribLocation(program,"aPosition"),normal:gl.getAttribLocation(program,"aNormal"),joints:gl.getAttribLocation(program,"aJoint"),weights:gl.getAttribLocation(program,"aWeight"),uv:gl.getAttribLocation(program,"aUV")};
- const uni=Object.fromEntries(["uBones[0]","uProjection","uView","uWorld","uFacing","uModelScale","uFootLift","uTint","uLight","uFabricAlbedo","uFabricNormal","uFabricORM","uFabricReady","uPhotoReady","uArtistAlbedo","uArtistNormal","uArtistMR","uArtistReady"].map(n=>[n,gl.getUniformLocation(program,n)]));
+ const uni=Object.fromEntries(["uBones[0]","uProjection","uView","uWorld","uFacing","uModelScale","uFootLift","uTint","uLight","uFabricAlbedo","uFabricNormal","uFabricORM","uFabricReady","uPhotoReady","uArtistAlbedo","uArtistNormal","uArtistMR","uArtistReady","uArtistSolid","uArtistSolidColor"].map(n=>[n,gl.getUniformLocation(program,n)]));
  const fabric={german:null,soviet:null,normal:null,orm:null,ready:{}};
  const photo={albedo:null,normal:null,roughness:null,ready:{}};
  const artistTextureState=new Map();
@@ -206,7 +212,9 @@ function create(gl,options={}){
  const artistMaterials=period?(json.materials||[]).map(m=>({
   base:artistTexture(m.pbrMetallicRoughness?.baseColorTexture?.index),
   normal:artistTexture(m.normalTexture?.index),
-  mr:artistTexture(m.pbrMetallicRoughness?.metallicRoughnessTexture?.index)
+  mr:artistTexture(m.pbrMetallicRoughness?.metallicRoughnessTexture?.index),
+  solid:(!m.pbrMetallicRoughness?.baseColorTexture?.index&&m.pbrMetallicRoughness?.baseColorTexture?.index!==0)?
+    m.pbrMetallicRoughness?.baseColorFactor?.slice(0,3)||null:null
  })):[];
  function makeTexture(key,source=root.KarmaWW2PBR?.[key],status=fabric.ready){
   const texture=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,texture);
@@ -221,7 +229,7 @@ function create(gl,options={}){
  }
  for(const key of ["german","soviet","normal","orm"])fabric[key]=makeTexture(key);
  for(const key of ["albedo","normal","roughness"])photo[key]=makeTexture(key,root.KarmaWW2Photo?.[key],photo.ready);
- let leftIK=new Map(),lastIK={enabled:false,error:Infinity,iterations:0};
+ let leftIK=new Map(),footIK=new Map(),lastIK={enabled:false,error:Infinity,iterations:0};
  const poseCache=new Map();
  function matrixAt(id,phase,clip,cache){
   if(cache.has(id))return cache.get(id);
@@ -279,6 +287,7 @@ function create(gl,options={}){
     q=qmul(q,qaxis("x",(name.endsWith("_l")?-1:1)*curl));
   }
   if(leftIK.has(id))q=qmul(q,leftIK.get(id));
+  if(footIK.has(id))q=qmul(q,footIK.get(id));
   const local=node.matrix?new Float32Array(node.matrix):trs(t,q,s),parentId=parent.get(id);
   const world=parentId!==undefined?matmul(matrixAt(parentId,phase,clip,cache),local):local;
   cache.set(id,world);return world;
@@ -304,6 +313,9 @@ function create(gl,options={}){
   return lifted;
  }
  function setLeftGrip({target,x,z,angle,phase,clip}){
+  // Foot corrections are actor/frame-local: discard the preceding frame before
+  // recomputing baseline gait position and solving this frame's foregrip.
+  footIK=new Map();lastFootKey=null;
   leftIK=new Map();
   if(!target||clip==="death"){lastIK={enabled:false,error:Infinity,iterations:0};return lastIK;}
   const co=-Math.cos(angle),si=-Math.sin(angle),dx=target[0]-x,dz=target[2]-z;
@@ -366,14 +378,84 @@ function create(gl,options={}){
   const m=matrixAt(id,phase,clip,new Map()),co=-Math.cos(angle),si=-Math.sin(angle);
   return [x+(m[12]*co-m[14]*si)*modelScale,m[13]*modelScale+footOffset(phase,clip),z+(m[12]*si+m[14]*co)*modelScale];
  }
+ function handWeaponAxes(phase=0,clip="idle"){
+  const id=nameToId.get("hand_r"),index=joints.indexOf(id);
+  if(index<0)return null;
+  // Actual artist GLB skin-space matrix of RightHand, after UAL retarget.
+  const a=pose(phase,clip,false),m=a.subarray(index*16,index*16+16);
+  return {x:[m[0],m[1],m[2]],y:[m[4],m[5],m[6]],z:[m[8],m[9],m[10]]};
+ }
+ function footPoints(phase,clip,x,z,angle){
+  if(!isFootRig)return null;
+  return {
+   left:jointPoint("foot_l",phase,clip,x,z,angle),
+   right:jointPoint("foot_r",phase,clip,x,z,angle),
+   referenceY:restingSole*modelScale,
+   clip,phase
+  };
+ }
+ const footAnchors={left:null,right:null};
+ let lastFootLock={enabled:false,contacts:0,maxSlipMeters:0,meanSlipMeters:0,iterations:0};
+ function setFootLocks({x,z,angle,phase,clip,enabled=true}){
+  footIK=new Map();
+  if(!isFootRig||!(clip==="walk"||clip==="run")){
+   footAnchors.left=null;footAnchors.right=null;
+   lastFootLock={enabled:false,contacts:0,maxSlipMeters:0,meanSlipMeters:0,iterations:0};return lastFootLock;
+  }
+  const feet=footPoints(phase,clip,x,z,angle);
+  const lowY=Math.min(feet.left[1],feet.right[1]);
+  let contacts=0,slipTotal=0,maxSlip=0,preSlipTotal=0,preSlipMax=0,iterations=0;
+  for(const side of ["left","right"]){
+   const ankle=nameToId.get("foot_"+(side==="left"?"l":"r"));
+   const calf=nameToId.get("calf_"+(side==="left"?"l":"r"));
+   const thigh=nameToId.get("thigh_"+(side==="left"?"l":"r"));
+   const pos=feet[side],contact=pos[1]-lowY<.022;
+   if(!contact||[ankle,calf,thigh].some(id=>id===undefined)){footAnchors[side]=null;continue;}
+   if(!footAnchors[side])footAnchors[side]=[...pos];
+   const anchor=footAnchors[side];
+   let slip=Math.hypot(anchor[0]-pos[0],anchor[2]-pos[2]);
+   // Relock past physical leg reach instead of lifting the whole skeleton or
+   // snapping over a wall during a camera/respawn teleport.
+   if(slip>.32){footAnchors[side]=[...pos];continue;}
+   preSlipTotal+=slip;preSlipMax=Math.max(preSlipMax,slip);
+   if(enabled){
+   const co=-Math.cos(angle),si=-Math.sin(angle),dx=anchor[0]-x,dz=anchor[2]-z;
+   const goal=[(co*dx+si*dz)/modelScale,(anchor[1]-footOffset(phase,clip))/modelScale,(-si*dx+co*dz)/modelScale];
+   const point=(id,cache)=>{const m=matrixAt(id,phase,clip,cache);return [m[12],m[13],m[14]];};
+   for(let n=0;n<8;n++){
+    for(const id of [calf,thigh]){
+     const cache=new Map(),pivot=point(id,cache),end=point(ankle,cache),
+      current=norm3(sub(end,pivot)),desired=norm3(sub(goal,pivot)),
+      axisWorld=cross(current,desired),mag=Math.hypot(...axisWorld);
+     if(mag<1e-7)continue;
+     const theta=Math.min(.25,Math.atan2(mag,clamp(dot(current,desired),-1,1))*.72),
+      mat=cache.get(id),axis=axisWorld.map(v=>v/mag);
+     const localAxis=norm3([
+      dot([mat[0],mat[1],mat[2]],axis)/Math.hypot(mat[0],mat[1],mat[2]),
+      dot([mat[4],mat[5],mat[6]],axis)/Math.hypot(mat[4],mat[5],mat[6]),
+      dot([mat[8],mat[9],mat[10]],axis)/Math.hypot(mat[8],mat[9],mat[10])]);
+     footIK.set(id,qmul(footIK.get(id)||[0,0,0,1],qAround(localAxis,theta)));
+    }
+    iterations++;
+    if(Math.hypot(...sub(point(ankle,new Map()),goal))*modelScale<.008)break;
+   }
+   }
+   const corrected=jointPoint("foot_"+(side==="left"?"l":"r"),phase,clip,x,z,angle);
+   slip=Math.hypot(corrected[0]-anchor[0],corrected[2]-anchor[2]);
+   contacts++;slipTotal+=slip;maxSlip=Math.max(maxSlip,slip);
+  }
+  lastFootLock={enabled,contacts,maxSlipMeters:maxSlip,meanSlipMeters:contacts?slipTotal/contacts:0,
+    meanPreSlipMeters:contacts?preSlipTotal/contacts:0,maxPreSlipMeters:preSlipMax,iterations};
+  return lastFootLock;
+ }
  function render({x,z,angle=0,phase=0,clip="idle",team="german",projection,view,useIK=true}){
   gl.useProgram(program);
   // IK belongs to the player's actual foregrip, never copy it onto enemy/allied
   // bots sharing this renderer. Quantize/reuse authentic UAL pose matrices for AI.
-  const savedIK=leftIK;
-  if(!useIK)leftIK=new Map();
+  const savedIK=leftIK,savedFeet=footIK;
+  if(!useIK){leftIK=new Map();footIK=new Map();}
   const baked=pose(phase,clip,period&&!useIK);
-  if(!useIK)leftIK=savedIK;
+  if(!useIK){leftIK=savedIK;footIK=savedFeet;}
   gl.uniformMatrix4fv(uni["uBones[0]"],false,baked);
   gl.uniformMatrix4fv(uni.uProjection,false,projection);
   gl.uniformMatrix4fv(uni.uView,false,view);
@@ -394,6 +476,8 @@ function create(gl,options={}){
   gl.uniform1f(uni.uPhotoReady,Number(photoReady));
   for(const m of renderMesh){
    const skin=artistMaterials[m.material];
+   gl.uniform1f(uni.uArtistSolid,Number(!!(period&&skin?.solid)));
+   gl.uniform3fv(uni.uArtistSolidColor,skin?.solid||[.32,.36,.22]);
    if(period&&skin){
     for(const [unit,info] of [[4,skin.base],[5,skin.normal],[6,skin.mr]]){
      gl.activeTexture(gl.TEXTURE0+unit);gl.bindTexture(gl.TEXTURE_2D,info?.texture||null);
@@ -408,7 +492,7 @@ function create(gl,options={}){
    gl.drawElements(gl.TRIANGLES,m.count,m.type,0);
   }
  }
- return {render,jointPoint,setLeftGrip,getIK:()=>lastIK,getFootContact:()=>lastFootContact,period,artistMaterialsReady:()=>artistMaterials.filter(m=>m.base?.ready&&m.normal?.ready&&m.mr?.ready).length,photoReady:()=>!!(photo.ready.albedo&&photo.ready.normal&&photo.ready.roughness),ualClips:Object.keys(ualClips),ualBones:ualBones.size,
+ return {render,jointPoint,footPoints,handWeaponAxes,setFootLocks,setLeftGrip,getIK:()=>lastIK,getFootContact:()=>lastFootContact,getFootLock:()=>lastFootLock,period,artistMaterialsReady:()=>artistMaterials.filter(m=>m.base?.ready&&m.normal?.ready&&m.mr?.ready).length,photoReady:()=>!!(photo.ready.albedo&&photo.ready.normal&&photo.ready.roughness),ualClips:Object.keys(ualClips),ualBones:ualBones.size,
    fabricReady:team=>!!(fabric.ready[team]&&fabric.ready.normal&&fabric.ready.orm),
    source:period?"Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget":"Quaternius Universal Base Characters 65-bone + real UAL1 Standard CC0 animation retarget",joints:joints.length,meshCount:renderMesh.length,triangles:renderMesh.reduce((a,m)=>a+m.count/3,0)};
 }

@@ -1,0 +1,24 @@
+KARMA REBIRTH Wave20 actor LOD art and provenance
+
+ORIGINAL AUTHOR: Britdawgmasterfunk
+Original work: WW2 Panzergrenadier (BlendSwap, CC0)
+Original official source: https://blendswap.com/blend/31342
+Actual original downloaded (owner's Mac): WW2 Panzergrenadier.blend, 52,897,426 bytes
+Original Blender source inspected: 27,005 triangles, three skinned objects, 64 Mixamo bones, 24 embedded images.
+The user-authorized original Blender file is NOT edited.
+
+Derivatives built in Blender from that verified CC0 work:
+  panzergrenadier_cc0_npc_lod.glb: true artist 64-bone skin, ~7k triangles, lower resolution 384px packed artist materials; German allies and enemies at medium/far distances.
+  soviet_side_derived_cc0_interim.glb: true artist main body mesh skinned to the same 64-joint skeleton, camo M42 helmet and German ammo pouch mesh removed, olive-tinted artist clothing and newly created simple rigged cloth cap; ~5k triangles, lower-resolution materials.
+IMPORTANT: The second file is NOT a real Soviet uniform or independently sourced Soviet WWII soldier. It is an explicitly labeled German-source-derivative provisional opponent visual while authentic Soviet source art is unavailable. It is NOT to be sold/identified as period-correct Soviet costume.
+
+Added cap and material edits are original project contributions licensed CC0 for redistribution in this project; any additional independent creator art will need its own source permission.
+The MP40-inspired stick-mag/folding-stock gun and PPSh-inspired drum-mag/wood-stock gun were modeled in Blender by this project from generic mechanical shapes; neither is a downloaded or certified period-exact authentic weapon model. All authored parts are weighted to the original Mixamo RightHand and the original source skeleton; retargeted hand rest correction is verified with actual Chrome source joint matrices.
+German AI source-derived model: approximately 7,569 indexed triangles.
+Soviet-side interim source-derived model: approximately 5,585 indexed triangles.
+Both retain 64 real source skin joints and PBR glTF materials. Authentic Soviet source asset sourcing remains unresolved; never describe the interim costume as an original Russian uniform.
+Clips use separate Quaternius UAL1 CC0 motions, with original character's Mixamo->UAL rest-basis retarget correction.
+No Sketchfab content, account data, non-commercial model, Call of Duty assets or unlicensed 2003 KARMA game meshes are used in these files.
+
+Optimized source Blender script: scripts/wave20-cc0-npc-lods.py
+Machine readable source audit: docs/research/wave20/npc-lods.json

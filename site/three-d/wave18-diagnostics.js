@@ -46,7 +46,7 @@ button.addEventListener("click",()=>{
  button.setAttribute("aria-expanded",String(open));if(open)update();
 });
 const snapshot=()=>({
- version:"Wave18",map:params.get("map")||"factory",
+ version:"Wave20.2",map:params.get("map")||"factory",
  gpuRenderer:gpuDescription,
  devicePixelRatio:devicePixelRatio,
  quality:root.KarmaWave18Perf?.quality||"loading",
@@ -58,6 +58,16 @@ const snapshot=()=>({
  cpuAiMs:root.KarmaWave18Perf?.aiMs??null,
  modelBytes:root.KarmaWave18Perf?.downloadedBytes??null,
  modelState:root.KarmaWave17Model?.state,
+ npcModels:root.KarmaWave20NPC?{
+  state:root.KarmaWave20NPC.state,
+  germanSkinned:root.KarmaWave20NPC.german,
+  sovietDerivedSkinned:root.KarmaWave20NPC.soviet,
+  fallback:root.KarmaWave20NPC.fallback,
+  visible:root.KarmaWave20NPC.visible,
+  germanGLB:root.KarmaWave20NPC.germanLOD?.triangles||null,
+  sovietGLB:root.KarmaWave20NPC.sovietInterim?.triangles||null,
+  sovietHistoricalAccuracy:"Temporary CC0 German-derived faction stand-in; not authentic Soviet soldier"
+ }:null,
  live3dBots:root.KarmaWave18Perf?.realBots??0,
  shots:root.KarmaDiagnostics?.shots??0,
  hits:root.KarmaDiagnostics?.hits??0,
@@ -67,6 +77,13 @@ const snapshot=()=>({
  aimKind:root.KarmaWave16Shot?.kind||null,
  impactXYZ:root.KarmaWave16Shot?.impact?.map(n=>+n.toFixed(2))||null
  ,footStabilization:root.KarmaWave19Pose?.foot||null,
+  footLock:root.KarmaWave19Pose?.footLock||null,
+  footAudit:root.KarmaWave20FootAudit?{
+   samples:root.KarmaWave20FootAudit.samples,
+   contacts:root.KarmaWave20FootAudit.contacts,
+   preMeanMeters:root.KarmaWave20FootAudit.preMeanMeters,
+   postMeanMeters:root.KarmaWave20FootAudit.postMeanMeters
+  }:null,
  sourceRig:root.KarmaWave19Pose?.source||null
 });
 root.KarmaWave18UserDiagnostics={snapshot};
@@ -78,11 +95,14 @@ function update(){
   "GPU "+s.gpuRenderer+"\n"+
   "CPU draw "+fmt(s.cpuSceneMs)+" ms | AI "+fmt(s.cpuAiMs)+" ms\n"+
   "품질 "+s.quality+" · 렌더 배율 "+fmt(s.graphicsScale)+" · 자동 단계 "+fmt(s.autoLod)+"\n"+
-  "실사 AI 표시 "+s.live3dBots+" · 모델 "+s.modelState+"\n"+
+  "실제 CC0 스킨 AI "+s.live3dBots+" · 모델 "+s.modelState+"\n"+
+  "독일군 "+(s.npcModels?.germanSkinned??0)+" / 소련군측 임시 "+(s.npcModels?.sovietDerivedSkinned??0)+
+   " / 기본 모델 "+(s.npcModels?.fallback??0)+"\n"+
   "사격 "+s.shots+"발 · 명중 "+s.hits+" · 명중률 "+fmt(s.accuracyPct)+"%\n"+
   "피해 "+s.damage+" · 엄폐 차단 "+s.coverBlocked+"\n"+
   "마지막 충돌 "+fmt(s.aimKind)+"\n"+
-  "발 보정 "+(s.footStabilization?.liftMeters?.toFixed(3)??"--")+"m";
+  "발 보정 "+(s.footStabilization?.liftMeters?.toFixed(3)??"--")+"m"+
+  " | 접지 오차 "+(s.footLock?.meanSlipMeters!=null?(s.footLock.meanSlipMeters*100).toFixed(2)+"cm":"--");
 }
 setInterval(update,800);
 if(params.get("diagnostics")==="1"){panel.style.display="block";button.setAttribute("aria-expanded","true");update();}
