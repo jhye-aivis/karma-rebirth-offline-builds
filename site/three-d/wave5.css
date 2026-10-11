@@ -1,0 +1,12 @@
+#benchmark{position:absolute;top:70px;right:24px;z-index:3;background:#07110edb;border:1px solid #9cab8a70;border-left:3px solid #dec088;color:#e6e4d3;padding:10px 13px;display:grid;gap:5px;font:700 12px ui-monospace,monospace;min-width:250px;pointer-events:none}
+#benchmark[hidden]{display:none}
+#benchmark strong{color:#e3c08b;letter-spacing:.1em;font-size:10px}
+#benchmark small{font-size:9px;font-weight:400;color:#a0b3a4}
+@media(max-width:700px){#benchmark{top:123px;right:5px;min-width:160px;font-size:10px}}
+#camera-mode{position:absolute;right:27px;top:69px;z-index:4;cursor:pointer;border:1px solid #e4bd837e;background:#0d1b16e6;color:#f2e4c5;padding:8px 12px;letter-spacing:.07em;font:bold 11px system-ui,sans-serif;border-radius:3px}
+#camera-mode:focus-visible{outline:2px solid #f4d88e;outline-offset:2px}
+#camera-mode:hover{background:#293b31}
+#mouse-lock-status{position:absolute;top:47%;left:50%;transform:translate(-50%,-50%);z-index:6;background:#07130de8;color:#ffe4ab;border:1px solid #deb877;padding:13px 22px;text-align:center;font:700 13px system-ui,sans-serif;pointer-events:none;max-width:75vw}
+#mouse-lock-status[hidden]{display:none}
+#application:has(#benchmark:not([hidden])) #camera-mode{top:188px}
+@media(max-width:700px){#camera-mode{top:131px;right:6px;font-size:9px;padding:6px 8px}}

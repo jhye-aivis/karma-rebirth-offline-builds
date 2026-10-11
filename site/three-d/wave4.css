@@ -1,0 +1,17 @@
+/* Wave04: deliberately source-led 2003 HUD silhouette, not a pixel-perfect copyright asset copy */
+#portrait{position:absolute;top:61px;left:23px;display:flex;align-items:center;gap:9px;z-index:3;background:#101c16b3;border-left:2px solid #aeae80;padding:6px 11px 7px 6px;pointer-events:none}
+.soldier-portrait{width:49px;height:53px;display:grid;place-items:center;font-size:29px;color:#d8c69f;background:radial-gradient(circle at 50% 38%,#b9a17c 0 19%,#69644f 20% 28%,#363f34 29% 49%,#222923 50%);border:1px solid #818976a0}
+#portrait .vitals{min-width:81px;display:grid;gap:5px}
+#portrait .vitals small{font-size:9px;letter-spacing:.15em;color:#d9e0cc}
+.health-meter{height:7px;background:#2c3430;outline:1px solid #a2ae8b61}
+#health-fill{height:7px;width:100%;background:linear-gradient(90deg,#689553,#b7d18a)}
+#health-value{font-size:12px;font-weight:800;color:#e6e5ce}
+#application.tdm #mini{border-radius:50%;box-shadow:0 0 0 4px #c8ba8b8c,0 3px 9px #0009;clip-path:circle(50%);border:0}
+#ammo-hud{position:absolute;right:25px;bottom:40px;z-index:3;display:grid;gap:4px;min-width:134px;text-align:right;padding:10px 15px;background:#111b17ba;border-right:2px solid #d6c58e}
+#ammo-hud small{letter-spacing:.13em;color:#b3c2b3;font-size:10px}
+#gun-name{font-weight:800;font-size:16px;letter-spacing:.07em;color:#f7e3ba}
+#ammo-hud span{font:700 24px 'Courier New',monospace;color:#f1edd8}
+#ammo-hud #hud-reserve{font-size:13px;color:#c1c7b3}
+#application.tdm .bottom .stat{margin-bottom:0;min-width:320px}
+#application.tdm .bottom{left:24px}
+@media(max-width:720px){#portrait{top:97px;left:10px}.soldier-portrait{width:31px;height:34px}#ammo-hud{right:6px;bottom:13px;padding:5px 8px;min-width:100px}.health-meter{width:55px}#application.tdm .bottom .stat{display:none}}

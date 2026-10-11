@@ -1,0 +1,7 @@
+WW2 Panzergrenadier by Britdawgmasterfunk
+Official original creator file: https://blendswap.com/blend/31342
+Displayed original author license: Creative Commons Zero (CC0 / public domain dedication).
+Owner-authorized original downloaded from BlendSwap: WW2 Panzergrenadier.blend; 52,897,426 bytes on 2026-10-11.
+Original contained 3 skinned mesh objects, 27,005 triangles, one 64-bone Mixamo armature, 24 packed texture images (Blender 5.2.2 inspection). Derived glTF panzergrenadier_cc0.glb is independently exported from the original Blender file, includes 15 exported material images (PBR), no animations provided by creator.
+Additional animation source: Quaternius CC0 UAL1 Standard, see existing animation license records. Do not imply Panzergrenadier author created motion clips or that all bones are exact matches.
+Neither original publisher's KARMA Online copyrighted game data nor unlicensed weapon models are included.

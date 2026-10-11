@@ -1,0 +1,15 @@
+Asset: Universal Base Characters — Superhero Male FullBody (Standard)
+Original author: Quaternius
+Official pack: https://quaternius.com/packs/universalbasecharacters.html
+Official free download: https://quaternius.itch.io/universal-base-characters
+License: Creative Commons Zero (CC0 1.0 Universal)
+License text: https://creativecommons.org/publicdomain/zero/1.0/legalcode
+Source redistributed GLB: https://github.com/programasweights/avatar/blob/main/public/assets/character.glb
+Redistributor provenance: https://github.com/programasweights/avatar/blob/main/ASSETS.md
+Retrieved 2026-10-10, original design and 65-joint rig CC0; external repository's game code MIT, not relevant to this original asset.
+
+Runtime binary: quaternius_superhero_male_cc0.glb and the self-contained exact decoded equivalent in ../quaternius-character-embedded.js.
+Changes in this project: game shader changes material appearance/color and original procedural 1944-style equipment is overlaid; no original commercial Karma model or texture was copied.
+WARNING: This is a generic high-fidelity humanoid BASE, not an authentic German/Soviet uniform and not a motion-captured WWII soldier. Clip motions are authored in runtime JS and remain prototype quality.
+
+The original source/preview URL is provided to document provenance; the game is distributed offline with asset data embedded locally.
