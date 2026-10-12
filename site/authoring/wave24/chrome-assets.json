@@ -1,0 +1,969 @@
+{
+  "date": "2026-10-12T04:07:12.571Z",
+  "renderer": "Mac Chrome headless ANGLE SwiftShader SOFTWARE WebGL2",
+  "materialSource": "Original procedural 2D textures, 2D user concept images are visual guidance, NOT GLB",
+  "scenes": [
+    {
+      "team": "german",
+      "camera": "first",
+      "gun": "mp40",
+      "filename": "docs/screenshots/wave24-german-first-mp40-real-chrome.png",
+      "select": {
+        "id": "mp40",
+        "name": "MP 40"
+      },
+      "art": {
+        "status": "loaded",
+        "source": "original Blender-modeled meshes from ChatGPT WWII reference concepts; 2D PNG references NOT 3D sources",
+        "format": "GLB + 11-float GPU mesh",
+        "models": {
+          "mp40": {
+            "vertices": 14460,
+            "triangles": 4820,
+            "bytes": 636240
+          },
+          "ppsh": {
+            "vertices": 24300,
+            "triangles": 8100,
+            "bytes": 1069200
+          },
+          "mosin": {
+            "vertices": 8496,
+            "triangles": 2832,
+            "bytes": 373824
+          },
+          "kar98": {
+            "vertices": 7236,
+            "triangles": 2412,
+            "bytes": 318384
+          },
+          "mg34": {
+            "vertices": 12300,
+            "triangles": 4100,
+            "bytes": 541200
+          },
+          "dp28": {
+            "vertices": 7392,
+            "triangles": 2464,
+            "bytes": 325248
+          }
+        },
+        "draws": 49,
+        "artistTriangles": 24728,
+        "loaded": 6,
+        "required": 6,
+        "wave24Material": {
+          "status": "loaded",
+          "source": "original procedural steel/phosphate/Bakelite/walnut texture atlas (not concept sheet pixels)",
+          "size": [
+            1024,
+            256
+          ]
+        },
+        "lastKind": "mp40",
+        "lastTriangles": 4820,
+        "lastPerspective": "1P"
+      },
+      "variant": {
+        "status": "loaded",
+        "german": [
+          "G01",
+          "G02",
+          "G03"
+        ],
+        "soviet": [
+          "S01",
+          "S02",
+          "S03"
+        ],
+        "resourceSharing": "one GLB + one GPU buffer for each gear mesh per faction, reused across all bots"
+      },
+      "role": [
+        {
+          "faction": "german",
+          "gear": "G01"
+        },
+        {
+          "faction": "german",
+          "gear": "G02"
+        },
+        {
+          "faction": "german",
+          "gear": "G03"
+        },
+        {
+          "faction": "soviet",
+          "gear": "S01"
+        },
+        {
+          "faction": "soviet",
+          "gear": "S02"
+        },
+        {
+          "faction": "soviet",
+          "gear": "S03"
+        },
+        {
+          "faction": "soviet",
+          "gear": "S01"
+        }
+      ],
+      "npc": {
+        "state": "loaded",
+        "germanSource": "Britdawgmasterfunk CC0 original + ChatGPT-authored 3D field kit",
+        "sovietSource": "Original Soviet-style modeled SSh helmet / canvas haversack / bedroll / pouches over authorized CC0 artist rig (not independent scanned Soviet soldier)",
+        "artistBots": 5,
+        "german": 3,
+        "soviet": 2,
+        "fallback": 0,
+        "showcase": true,
+        "visible": 5,
+        "sovietInterim": {
+          "triangles": 12189,
+          "bytes": 1948888,
+          "source": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget"
+        },
+        "germanLOD": {
+          "triangles": 15991,
+          "bytes": 4884988,
+          "source": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget"
+        }
+      },
+      "perf": {
+        "quality": "fast",
+        "autoLod": 0,
+        "fullBytes": 43578032,
+        "lodBytes": 11607272,
+        "source": "author's licensed CC0 Panzergrenadier",
+        "frames": 54,
+        "actorRenderMs": 0.5,
+        "realBots": 5,
+        "renderScale": 0.68,
+        "shadowCpuMs": 0,
+        "vfxCpuMs": 0,
+        "loadMs": 3058.399999976158,
+        "decodeMs": 556.7999999523163,
+        "downloadedBytes": 11607272,
+        "fps": 16.79,
+        "frameP95Ms": 70,
+        "sceneMs": 2.7,
+        "aiMs": 0.26
+      },
+      "gpu": {
+        "drawCalls": 38,
+        "triangles": 70604,
+        "shadowDrawCalls": 0,
+        "shadowTriangles": 0,
+        "actorDrawCalls": 36,
+        "actorTriangles": 65276,
+        "frames": 54,
+        "gpuTimerSupported": true,
+        "gpuMs": null,
+        "gpuMemoryBytes": null,
+        "gpuMemorySource": "WebGL does not report GPU memory use"
+      }
+    },
+    {
+      "team": "german",
+      "camera": "third",
+      "gun": "kar98",
+      "filename": "docs/screenshots/wave24-german-third-kar98-real-chrome.png",
+      "select": {
+        "id": "kar98",
+        "name": "Kar98k"
+      },
+      "art": {
+        "status": "loaded",
+        "source": "original Blender-modeled meshes from ChatGPT WWII reference concepts; 2D PNG references NOT 3D sources",
+        "format": "GLB + 11-float GPU mesh",
+        "models": {
+          "mp40": {
+            "vertices": 14460,
+            "triangles": 4820,
+            "bytes": 636240
+          },
+          "ppsh": {
+            "vertices": 24300,
+            "triangles": 8100,
+            "bytes": 1069200
+          },
+          "kar98": {
+            "vertices": 7236,
+            "triangles": 2412,
+            "bytes": 318384
+          },
+          "mg34": {
+            "vertices": 12300,
+            "triangles": 4100,
+            "bytes": 541200
+          },
+          "mosin": {
+            "vertices": 8496,
+            "triangles": 2832,
+            "bytes": 373824
+          },
+          "dp28": {
+            "vertices": 7392,
+            "triangles": 2464,
+            "bytes": 325248
+          }
+        },
+        "draws": 45,
+        "artistTriangles": 24728,
+        "loaded": 6,
+        "required": 6,
+        "wave24Material": {
+          "status": "loaded",
+          "source": "original procedural steel/phosphate/Bakelite/walnut texture atlas (not concept sheet pixels)",
+          "size": [
+            1024,
+            256
+          ]
+        },
+        "lastKind": "kar98",
+        "lastTriangles": 2412,
+        "lastPerspective": "3P"
+      },
+      "variant": {
+        "status": "loaded",
+        "german": [
+          "G01",
+          "G02",
+          "G03"
+        ],
+        "soviet": [
+          "S01",
+          "S02",
+          "S03"
+        ],
+        "resourceSharing": "one GLB + one GPU buffer for each gear mesh per faction, reused across all bots"
+      },
+      "role": [
+        {
+          "faction": "german",
+          "gear": "G01"
+        },
+        {
+          "faction": "german",
+          "gear": "G02"
+        },
+        {
+          "faction": "german",
+          "gear": "G03"
+        },
+        {
+          "faction": "soviet",
+          "gear": "S01"
+        },
+        {
+          "faction": "soviet",
+          "gear": "S02"
+        },
+        {
+          "faction": "soviet",
+          "gear": "S03"
+        },
+        {
+          "faction": "soviet",
+          "gear": "S01"
+        }
+      ],
+      "npc": {
+        "state": "loaded",
+        "germanSource": "Britdawgmasterfunk CC0 original + ChatGPT-authored 3D field kit",
+        "sovietSource": "Original Soviet-style modeled SSh helmet / canvas haversack / bedroll / pouches over authorized CC0 artist rig (not independent scanned Soviet soldier)",
+        "artistBots": 5,
+        "german": 3,
+        "soviet": 2,
+        "fallback": 0,
+        "showcase": true,
+        "visible": 5,
+        "playerSource": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget",
+        "sovietInterim": {
+          "triangles": 12189,
+          "bytes": 1948888,
+          "source": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget"
+        },
+        "germanLOD": {
+          "triangles": 15991,
+          "bytes": 4884988,
+          "source": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget"
+        }
+      },
+      "perf": {
+        "quality": "fast",
+        "autoLod": 0,
+        "fullBytes": 43578032,
+        "lodBytes": 11607272,
+        "source": "author's licensed CC0 Panzergrenadier",
+        "frames": 50,
+        "actorRenderMs": 0.5999999046325684,
+        "realBots": 5,
+        "renderScale": 0.68,
+        "shadowCpuMs": 0,
+        "vfxCpuMs": 0,
+        "loadMs": 2297.600000023842,
+        "decodeMs": 484.7000000476837,
+        "downloadedBytes": 11607272,
+        "fps": 16.02,
+        "frameP95Ms": 70,
+        "sceneMs": 2.33,
+        "aiMs": 0.26
+      },
+      "gpu": {
+        "drawCalls": 43,
+        "triangles": 84318,
+        "shadowDrawCalls": 0,
+        "shadowTriangles": 0,
+        "actorDrawCalls": 41,
+        "actorTriangles": 78960,
+        "frames": 50,
+        "gpuTimerSupported": true,
+        "gpuMs": null,
+        "gpuMemoryBytes": null,
+        "gpuMemorySource": "WebGL does not report GPU memory use"
+      }
+    },
+    {
+      "team": "german",
+      "camera": "first",
+      "gun": "mg34",
+      "filename": "docs/screenshots/wave24-german-first-mg34-real-chrome.png",
+      "select": {
+        "id": "mg34",
+        "name": "MG 34"
+      },
+      "art": {
+        "status": "loaded",
+        "source": "original Blender-modeled meshes from ChatGPT WWII reference concepts; 2D PNG references NOT 3D sources",
+        "format": "GLB + 11-float GPU mesh",
+        "models": {
+          "mp40": {
+            "vertices": 14460,
+            "triangles": 4820,
+            "bytes": 636240
+          },
+          "mosin": {
+            "vertices": 8496,
+            "triangles": 2832,
+            "bytes": 373824
+          },
+          "ppsh": {
+            "vertices": 24300,
+            "triangles": 8100,
+            "bytes": 1069200
+          },
+          "kar98": {
+            "vertices": 7236,
+            "triangles": 2412,
+            "bytes": 318384
+          },
+          "mg34": {
+            "vertices": 12300,
+            "triangles": 4100,
+            "bytes": 541200
+          },
+          "dp28": {
+            "vertices": 7392,
+            "triangles": 2464,
+            "bytes": 325248
+          }
+        },
+        "draws": 47,
+        "artistTriangles": 24728,
+        "loaded": 6,
+        "required": 6,
+        "wave24Material": {
+          "status": "loaded",
+          "source": "original procedural steel/phosphate/Bakelite/walnut texture atlas (not concept sheet pixels)",
+          "size": [
+            1024,
+            256
+          ]
+        },
+        "lastKind": "mg34",
+        "lastTriangles": 4100,
+        "lastPerspective": "1P"
+      },
+      "variant": {
+        "status": "loaded",
+        "german": [
+          "G01",
+          "G02",
+          "G03"
+        ],
+        "soviet": [
+          "S01",
+          "S02",
+          "S03"
+        ],
+        "resourceSharing": "one GLB + one GPU buffer for each gear mesh per faction, reused across all bots"
+      },
+      "role": [
+        {
+          "faction": "german",
+          "gear": "G01"
+        },
+        {
+          "faction": "german",
+          "gear": "G02"
+        },
+        {
+          "faction": "german",
+          "gear": "G03"
+        },
+        {
+          "faction": "soviet",
+          "gear": "S01"
+        },
+        {
+          "faction": "soviet",
+          "gear": "S02"
+        },
+        {
+          "faction": "soviet",
+          "gear": "S03"
+        },
+        {
+          "faction": "soviet",
+          "gear": "S01"
+        }
+      ],
+      "npc": {
+        "state": "loaded",
+        "germanSource": "Britdawgmasterfunk CC0 original + ChatGPT-authored 3D field kit",
+        "sovietSource": "Original Soviet-style modeled SSh helmet / canvas haversack / bedroll / pouches over authorized CC0 artist rig (not independent scanned Soviet soldier)",
+        "artistBots": 5,
+        "german": 3,
+        "soviet": 2,
+        "fallback": 0,
+        "showcase": true,
+        "visible": 5,
+        "sovietInterim": {
+          "triangles": 12189,
+          "bytes": 1948888,
+          "source": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget"
+        },
+        "germanLOD": {
+          "triangles": 15991,
+          "bytes": 4884988,
+          "source": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget"
+        }
+      },
+      "perf": {
+        "quality": "fast",
+        "autoLod": 0,
+        "fullBytes": 43578032,
+        "lodBytes": 11607272,
+        "source": "author's licensed CC0 Panzergrenadier",
+        "frames": 52,
+        "actorRenderMs": 0.5,
+        "realBots": 5,
+        "renderScale": 0.68,
+        "shadowCpuMs": 0.1,
+        "vfxCpuMs": 0,
+        "loadMs": 2098.6999999284744,
+        "decodeMs": 516.6999999284744,
+        "downloadedBytes": 11607272,
+        "fps": 16.3,
+        "frameP95Ms": 70,
+        "sceneMs": 1.54,
+        "aiMs": 0.27
+      },
+      "gpu": {
+        "drawCalls": 47,
+        "triangles": 78572,
+        "shadowDrawCalls": 9,
+        "shadowTriangles": 8688,
+        "actorDrawCalls": 36,
+        "actorTriangles": 64556,
+        "frames": 52,
+        "gpuTimerSupported": true,
+        "gpuMs": null,
+        "gpuMemoryBytes": null,
+        "gpuMemorySource": "WebGL does not report GPU memory use"
+      }
+    },
+    {
+      "team": "soviet",
+      "camera": "first",
+      "gun": "ppsh41",
+      "filename": "docs/screenshots/wave24-soviet-first-ppsh41-real-chrome.png",
+      "select": {
+        "id": "ppsh41",
+        "name": "PPSh-41"
+      },
+      "art": {
+        "status": "loaded",
+        "source": "original Blender-modeled meshes from ChatGPT WWII reference concepts; 2D PNG references NOT 3D sources",
+        "format": "GLB + 11-float GPU mesh",
+        "models": {
+          "mp40": {
+            "vertices": 14460,
+            "triangles": 4820,
+            "bytes": 636240
+          },
+          "ppsh": {
+            "vertices": 24300,
+            "triangles": 8100,
+            "bytes": 1069200
+          },
+          "kar98": {
+            "vertices": 7236,
+            "triangles": 2412,
+            "bytes": 318384
+          },
+          "mosin": {
+            "vertices": 8496,
+            "triangles": 2832,
+            "bytes": 373824
+          },
+          "mg34": {
+            "vertices": 12300,
+            "triangles": 4100,
+            "bytes": 541200
+          },
+          "dp28": {
+            "vertices": 7392,
+            "triangles": 2464,
+            "bytes": 325248
+          }
+        },
+        "draws": 173,
+        "artistTriangles": 24728,
+        "loaded": 6,
+        "required": 6,
+        "wave24Material": {
+          "status": "loaded",
+          "source": "original procedural steel/phosphate/Bakelite/walnut texture atlas (not concept sheet pixels)",
+          "size": [
+            1024,
+            256
+          ]
+        },
+        "lastKind": "ppsh",
+        "lastTriangles": 8100,
+        "lastPerspective": "1P"
+      },
+      "variant": {
+        "status": "loaded",
+        "german": [
+          "G01",
+          "G02",
+          "G03"
+        ],
+        "soviet": [
+          "S01",
+          "S02",
+          "S03"
+        ],
+        "resourceSharing": "one GLB + one GPU buffer for each gear mesh per faction, reused across all bots"
+      },
+      "role": [
+        {
+          "faction": "german",
+          "gear": "G01"
+        },
+        {
+          "faction": "german",
+          "gear": "G02"
+        },
+        {
+          "faction": "german",
+          "gear": "G03"
+        },
+        {
+          "faction": "german",
+          "gear": "G01"
+        },
+        {
+          "faction": "soviet",
+          "gear": "S01"
+        },
+        {
+          "faction": "soviet",
+          "gear": "S02"
+        },
+        {
+          "faction": "soviet",
+          "gear": "S03"
+        }
+      ],
+      "npc": {
+        "state": "loaded",
+        "germanSource": "Britdawgmasterfunk CC0 original + ChatGPT-authored 3D field kit",
+        "sovietSource": "Original Soviet-style modeled SSh helmet / canvas haversack / bedroll / pouches over authorized CC0 artist rig (not independent scanned Soviet soldier)",
+        "artistBots": 4,
+        "german": 2,
+        "soviet": 2,
+        "fallback": 0,
+        "showcase": true,
+        "visible": 4,
+        "sovietInterim": {
+          "triangles": 12189,
+          "bytes": 1948888,
+          "source": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget"
+        },
+        "germanLOD": {
+          "triangles": 15991,
+          "bytes": 4884988,
+          "source": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget"
+        }
+      },
+      "perf": {
+        "quality": "fast",
+        "autoLod": 0,
+        "fullBytes": 43578032,
+        "lodBytes": 11607272,
+        "source": "author's licensed CC0 Panzergrenadier",
+        "frames": 178,
+        "actorRenderMs": 0.9000000953674316,
+        "realBots": 4,
+        "renderScale": 0.68,
+        "shadowCpuMs": 0.2,
+        "vfxCpuMs": 0,
+        "loadMs": 1897.8000000715256,
+        "decodeMs": 108.60000002384186,
+        "downloadedBytes": 11607272,
+        "fps": 18.88,
+        "frameP95Ms": 70,
+        "sceneMs": 1.19,
+        "aiMs": 0.25
+      },
+      "gpu": {
+        "drawCalls": 38,
+        "triangles": 70297,
+        "shadowDrawCalls": 9,
+        "shadowTriangles": 8688,
+        "actorDrawCalls": 27,
+        "actorTriangles": 56281,
+        "frames": 178,
+        "gpuTimerSupported": true,
+        "gpuMs": null,
+        "gpuMemoryBytes": null,
+        "gpuMemorySource": "WebGL does not report GPU memory use"
+      }
+    },
+    {
+      "team": "soviet",
+      "camera": "third",
+      "gun": "mosin",
+      "filename": "docs/screenshots/wave24-soviet-third-mosin-real-chrome.png",
+      "select": {
+        "id": "mosin",
+        "name": "Mosin-Nagant"
+      },
+      "art": {
+        "status": "loaded",
+        "source": "original Blender-modeled meshes from ChatGPT WWII reference concepts; 2D PNG references NOT 3D sources",
+        "format": "GLB + 11-float GPU mesh",
+        "models": {
+          "ppsh": {
+            "vertices": 24300,
+            "triangles": 8100,
+            "bytes": 1069200
+          },
+          "mp40": {
+            "vertices": 14460,
+            "triangles": 4820,
+            "bytes": 636240
+          },
+          "kar98": {
+            "vertices": 7236,
+            "triangles": 2412,
+            "bytes": 318384
+          },
+          "mg34": {
+            "vertices": 12300,
+            "triangles": 4100,
+            "bytes": 541200
+          },
+          "mosin": {
+            "vertices": 8496,
+            "triangles": 2832,
+            "bytes": 373824
+          },
+          "dp28": {
+            "vertices": 7392,
+            "triangles": 2464,
+            "bytes": 325248
+          }
+        },
+        "draws": 104,
+        "artistTriangles": 24728,
+        "loaded": 6,
+        "required": 6,
+        "wave24Material": {
+          "status": "loaded",
+          "source": "original procedural steel/phosphate/Bakelite/walnut texture atlas (not concept sheet pixels)",
+          "size": [
+            1024,
+            256
+          ]
+        },
+        "lastKind": "mosin",
+        "lastTriangles": 2832,
+        "lastPerspective": "3P"
+      },
+      "variant": {
+        "status": "loaded",
+        "german": [
+          "G01",
+          "G02",
+          "G03"
+        ],
+        "soviet": [
+          "S01",
+          "S02",
+          "S03"
+        ],
+        "resourceSharing": "one GLB + one GPU buffer for each gear mesh per faction, reused across all bots"
+      },
+      "role": [
+        {
+          "faction": "german",
+          "gear": "G01"
+        },
+        {
+          "faction": "german",
+          "gear": "G02"
+        },
+        {
+          "faction": "german",
+          "gear": "G03"
+        },
+        {
+          "faction": "german",
+          "gear": "G01"
+        },
+        {
+          "faction": "soviet",
+          "gear": "S01"
+        },
+        {
+          "faction": "soviet",
+          "gear": "S02"
+        },
+        {
+          "faction": "soviet",
+          "gear": "S03"
+        }
+      ],
+      "npc": {
+        "state": "loaded",
+        "germanSource": "Britdawgmasterfunk CC0 original + ChatGPT-authored 3D field kit",
+        "sovietSource": "Original Soviet-style modeled SSh helmet / canvas haversack / bedroll / pouches over authorized CC0 artist rig (not independent scanned Soviet soldier)",
+        "artistBots": 4,
+        "german": 2,
+        "soviet": 2,
+        "fallback": 0,
+        "showcase": true,
+        "visible": 4,
+        "playerSource": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget",
+        "sovietInterim": {
+          "triangles": 12189,
+          "bytes": 1948888,
+          "source": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget"
+        },
+        "germanLOD": {
+          "triangles": 15991,
+          "bytes": 4884988,
+          "source": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget"
+        }
+      },
+      "perf": {
+        "quality": "fast",
+        "autoLod": 0,
+        "fullBytes": 43578032,
+        "lodBytes": 11607272,
+        "source": "author's licensed CC0 Panzergrenadier",
+        "frames": 109,
+        "actorRenderMs": 0.5999999046325684,
+        "realBots": 4,
+        "renderScale": 0.68,
+        "shadowCpuMs": 0.1,
+        "vfxCpuMs": 0,
+        "loadMs": 2069,
+        "decodeMs": 473.5,
+        "downloadedBytes": 11607272,
+        "fps": 17.15,
+        "frameP95Ms": 70,
+        "sceneMs": 1.79,
+        "aiMs": 0.36
+      },
+      "gpu": {
+        "drawCalls": 44,
+        "triangles": 74886,
+        "shadowDrawCalls": 9,
+        "shadowTriangles": 8718,
+        "actorDrawCalls": 33,
+        "actorTriangles": 60810,
+        "frames": 109,
+        "gpuTimerSupported": true,
+        "gpuMs": null,
+        "gpuMemoryBytes": null,
+        "gpuMemorySource": "WebGL does not report GPU memory use"
+      }
+    },
+    {
+      "team": "soviet",
+      "camera": "first",
+      "gun": "dp28",
+      "filename": "docs/screenshots/wave24-soviet-first-dp28-real-chrome.png",
+      "select": {
+        "id": "dp28",
+        "name": "DP-28 Degtyaryov"
+      },
+      "art": {
+        "status": "loaded",
+        "source": "original Blender-modeled meshes from ChatGPT WWII reference concepts; 2D PNG references NOT 3D sources",
+        "format": "GLB + 11-float GPU mesh",
+        "models": {
+          "mp40": {
+            "vertices": 14460,
+            "triangles": 4820,
+            "bytes": 636240
+          },
+          "ppsh": {
+            "vertices": 24300,
+            "triangles": 8100,
+            "bytes": 1069200
+          },
+          "kar98": {
+            "vertices": 7236,
+            "triangles": 2412,
+            "bytes": 318384
+          },
+          "mosin": {
+            "vertices": 8496,
+            "triangles": 2832,
+            "bytes": 373824
+          },
+          "mg34": {
+            "vertices": 12300,
+            "triangles": 4100,
+            "bytes": 541200
+          },
+          "dp28": {
+            "vertices": 7392,
+            "triangles": 2464,
+            "bytes": 325248
+          }
+        },
+        "draws": 182,
+        "artistTriangles": 24728,
+        "loaded": 6,
+        "required": 6,
+        "wave24Material": {
+          "status": "loaded",
+          "source": "original procedural steel/phosphate/Bakelite/walnut texture atlas (not concept sheet pixels)",
+          "size": [
+            1024,
+            256
+          ]
+        },
+        "lastKind": "dp28",
+        "lastTriangles": 2464,
+        "lastPerspective": "1P"
+      },
+      "variant": {
+        "status": "loaded",
+        "german": [
+          "G01",
+          "G02",
+          "G03"
+        ],
+        "soviet": [
+          "S01",
+          "S02",
+          "S03"
+        ],
+        "resourceSharing": "one GLB + one GPU buffer for each gear mesh per faction, reused across all bots"
+      },
+      "role": [
+        {
+          "faction": "german",
+          "gear": "G01"
+        },
+        {
+          "faction": "german",
+          "gear": "G02"
+        },
+        {
+          "faction": "german",
+          "gear": "G03"
+        },
+        {
+          "faction": "german",
+          "gear": "G01"
+        },
+        {
+          "faction": "soviet",
+          "gear": "S01"
+        },
+        {
+          "faction": "soviet",
+          "gear": "S02"
+        },
+        {
+          "faction": "soviet",
+          "gear": "S03"
+        }
+      ],
+      "npc": {
+        "state": "loaded",
+        "germanSource": "Britdawgmasterfunk CC0 original + ChatGPT-authored 3D field kit",
+        "sovietSource": "Original Soviet-style modeled SSh helmet / canvas haversack / bedroll / pouches over authorized CC0 artist rig (not independent scanned Soviet soldier)",
+        "artistBots": 4,
+        "german": 2,
+        "soviet": 2,
+        "fallback": 0,
+        "showcase": true,
+        "visible": 4,
+        "sovietInterim": {
+          "triangles": 12189,
+          "bytes": 1948888,
+          "source": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget"
+        },
+        "germanLOD": {
+          "triangles": 15991,
+          "bytes": 4884988,
+          "source": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget"
+        }
+      },
+      "perf": {
+        "quality": "fast",
+        "autoLod": 0,
+        "fullBytes": 43578032,
+        "lodBytes": 11607272,
+        "source": "author's licensed CC0 Panzergrenadier",
+        "frames": 187,
+        "actorRenderMs": 0.6000000238418579,
+        "realBots": 4,
+        "renderScale": 0.68,
+        "shadowCpuMs": 0,
+        "vfxCpuMs": 0,
+        "loadMs": 1509.6000000238419,
+        "decodeMs": 299.39999997615814,
+        "downloadedBytes": 11607272,
+        "fps": 18.95,
+        "frameP95Ms": 70,
+        "sceneMs": 1.07,
+        "aiMs": 0.25
+      },
+      "gpu": {
+        "drawCalls": 38,
+        "triangles": 64661,
+        "shadowDrawCalls": 9,
+        "shadowTriangles": 8688,
+        "actorDrawCalls": 27,
+        "actorTriangles": 50645,
+        "frames": 187,
+        "gpuTimerSupported": true,
+        "gpuMs": null,
+        "gpuMemoryBytes": null,
+        "gpuMemorySource": "WebGL does not report GPU memory use"
+      }
+    }
+  ]
+}

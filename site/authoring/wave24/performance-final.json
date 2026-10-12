@@ -1,0 +1,555 @@
+{
+  "mode": "final",
+  "date": "2026-10-12T04:10:08.809Z",
+  "renderer": "Mac Chrome ANGLE SwiftShader software WebGL2, not Windows GPU",
+  "scene": "Factory, third-person, fast, scale=.68, preview, warmup ~4sec each",
+  "tests": [
+    {
+      "id": "A",
+      "count": 1,
+      "shoot": false,
+      "feedback": false,
+      "setup": {
+        "count": 1,
+        "mode": "tdm",
+        "feedback": false
+      },
+      "data": {
+        "data": {
+          "frames": 93,
+          "meanFrameMs": 49.46021505376344,
+          "p50": 50,
+          "p95": 83.30000000000109,
+          "fps": 20.218270359580853,
+          "onePercentLowFPS": 10
+        },
+        "engine": {
+          "quality": "fast",
+          "autoLod": 0,
+          "fullBytes": 43578032,
+          "lodBytes": 11607272,
+          "source": "author's licensed CC0 Panzergrenadier",
+          "frames": 107,
+          "actorRenderMs": 0.19999992847442627,
+          "realBots": 1,
+          "renderScale": 0.68,
+          "shadowCpuMs": 0,
+          "vfxCpuMs": 0,
+          "loadMs": 2669.7000000476837,
+          "decodeMs": 504.7999999523163,
+          "downloadedBytes": 11607272,
+          "fps": 19.94,
+          "frameP95Ms": 70,
+          "sceneMs": 1.8,
+          "aiMs": 0.06
+        },
+        "artist": {
+          "state": "loaded",
+          "germanSource": "Britdawgmasterfunk CC0 original + ChatGPT-authored 3D field kit",
+          "sovietSource": "Original Soviet-style modeled SSh helmet / canvas haversack / bedroll / pouches over authorized CC0 artist rig (not independent scanned Soviet soldier)",
+          "artistBots": 1,
+          "german": 1,
+          "soviet": 0,
+          "fallback": 0,
+          "showcase": true,
+          "visible": 1,
+          "playerSource": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget",
+          "sovietInterim": {
+            "triangles": 12189,
+            "bytes": 1948888,
+            "source": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget"
+          },
+          "germanLOD": {
+            "triangles": 15991,
+            "bytes": 4884988,
+            "source": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget"
+          }
+        },
+        "draws": {
+          "drawCalls": 13,
+          "triangles": 42290,
+          "shadowDrawCalls": 0,
+          "shadowTriangles": 0,
+          "actorDrawCalls": 11,
+          "actorTriangles": 37004,
+          "frames": 107,
+          "gpuTimerSupported": true,
+          "gpuMs": null,
+          "gpuMemoryBytes": null,
+          "gpuMemorySource": "WebGL does not report GPU memory use"
+        },
+        "feedback": {
+          "received": 0,
+          "dealt": 0,
+          "headshots": 0,
+          "ignoredDuplicate": 0,
+          "processed": 0,
+          "playerHpLast": 100,
+          "enabled": false,
+          "lastPart": null,
+          "lastDirection": null,
+          "motionReduced": false,
+          "activeContacts": 0,
+          "hitMarkerVisible": false,
+          "damageIndicatorVisible": false
+        }
+      }
+    },
+    {
+      "id": "B",
+      "count": 4,
+      "shoot": false,
+      "feedback": false,
+      "setup": {
+        "count": 4,
+        "mode": "tdm",
+        "feedback": false
+      },
+      "data": {
+        "data": {
+          "frames": 69,
+          "meanFrameMs": 68.59565217391304,
+          "p50": 66.60000000000036,
+          "p95": 133.39999999999964,
+          "fps": 14.578183431577614,
+          "onePercentLowFPS": 6.671114076050717
+        },
+        "engine": {
+          "quality": "fast",
+          "autoLod": 0,
+          "fullBytes": 43578032,
+          "lodBytes": 11607272,
+          "source": "author's licensed CC0 Panzergrenadier",
+          "frames": 132,
+          "actorRenderMs": 0.3999999761581421,
+          "realBots": 4,
+          "renderScale": 0.68,
+          "shadowCpuMs": 0,
+          "vfxCpuMs": 0,
+          "loadMs": 2411.399999976158,
+          "decodeMs": 547.3999999761581,
+          "downloadedBytes": 11607272,
+          "fps": 16.74,
+          "frameP95Ms": 70,
+          "sceneMs": 1.73,
+          "aiMs": 0.17
+        },
+        "artist": {
+          "state": "loaded",
+          "germanSource": "Britdawgmasterfunk CC0 original + ChatGPT-authored 3D field kit",
+          "sovietSource": "Original Soviet-style modeled SSh helmet / canvas haversack / bedroll / pouches over authorized CC0 artist rig (not independent scanned Soviet soldier)",
+          "artistBots": 4,
+          "german": 3,
+          "soviet": 1,
+          "fallback": 0,
+          "showcase": true,
+          "visible": 4,
+          "playerSource": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget",
+          "sovietInterim": {
+            "triangles": 12189,
+            "bytes": 1948888,
+            "source": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget"
+          },
+          "germanLOD": {
+            "triangles": 15991,
+            "bytes": 4884988,
+            "source": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget"
+          }
+        },
+        "draws": {
+          "drawCalls": 37,
+          "triangles": 76349,
+          "shadowDrawCalls": 0,
+          "shadowTriangles": 0,
+          "actorDrawCalls": 35,
+          "actorTriangles": 71027,
+          "frames": 132,
+          "gpuTimerSupported": true,
+          "gpuMs": null,
+          "gpuMemoryBytes": null,
+          "gpuMemorySource": "WebGL does not report GPU memory use"
+        },
+        "feedback": {
+          "received": 0,
+          "dealt": 0,
+          "headshots": 0,
+          "ignoredDuplicate": 0,
+          "processed": 0,
+          "playerHpLast": 100,
+          "enabled": false,
+          "lastPart": null,
+          "lastDirection": null,
+          "motionReduced": false,
+          "activeContacts": 0,
+          "hitMarkerVisible": false,
+          "damageIndicatorVisible": false
+        }
+      }
+    },
+    {
+      "id": "C",
+      "count": 8,
+      "shoot": false,
+      "feedback": false,
+      "setup": {
+        "count": 8,
+        "mode": "tdm",
+        "feedback": false
+      },
+      "data": {
+        "data": {
+          "frames": 58,
+          "meanFrameMs": 79.59482758620689,
+          "p50": 83.29999999999927,
+          "p95": 150,
+          "fps": 12.563630455973142,
+          "onePercentLowFPS": 6.662225183211176
+        },
+        "engine": {
+          "quality": "fast",
+          "autoLod": 0,
+          "fullBytes": 43578032,
+          "lodBytes": 11607272,
+          "source": "author's licensed CC0 Panzergrenadier",
+          "frames": 128,
+          "actorRenderMs": 0.8999999761581421,
+          "realBots": 8,
+          "renderScale": 0.68,
+          "shadowCpuMs": 0,
+          "vfxCpuMs": 0,
+          "loadMs": 1887.2000000476837,
+          "decodeMs": 516,
+          "downloadedBytes": 11607272,
+          "fps": 16.24,
+          "frameP95Ms": 70,
+          "sceneMs": 1.84,
+          "aiMs": 0.18
+        },
+        "artist": {
+          "state": "loaded",
+          "germanSource": "Britdawgmasterfunk CC0 original + ChatGPT-authored 3D field kit",
+          "sovietSource": "Original Soviet-style modeled SSh helmet / canvas haversack / bedroll / pouches over authorized CC0 artist rig (not independent scanned Soviet soldier)",
+          "artistBots": 8,
+          "german": 4,
+          "soviet": 4,
+          "fallback": 0,
+          "showcase": true,
+          "visible": 8,
+          "playerSource": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget",
+          "sovietInterim": {
+            "triangles": 12189,
+            "bytes": 1948888,
+            "source": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget"
+          },
+          "germanLOD": {
+            "triangles": 15991,
+            "bytes": 4884988,
+            "source": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget"
+          }
+        },
+        "draws": {
+          "drawCalls": 64,
+          "triangles": 118415,
+          "shadowDrawCalls": 0,
+          "shadowTriangles": 0,
+          "actorDrawCalls": 62,
+          "actorTriangles": 113045,
+          "frames": 128,
+          "gpuTimerSupported": true,
+          "gpuMs": null,
+          "gpuMemoryBytes": null,
+          "gpuMemorySource": "WebGL does not report GPU memory use"
+        },
+        "feedback": {
+          "received": 0,
+          "dealt": 0,
+          "headshots": 0,
+          "ignoredDuplicate": 0,
+          "processed": 0,
+          "playerHpLast": 100,
+          "enabled": false,
+          "lastPart": null,
+          "lastDirection": null,
+          "motionReduced": false,
+          "activeContacts": 0,
+          "hitMarkerVisible": false,
+          "damageIndicatorVisible": false
+        }
+      }
+    },
+    {
+      "id": "D",
+      "count": 8,
+      "shoot": true,
+      "feedback": false,
+      "setup": {
+        "count": 8,
+        "mode": "tdm",
+        "feedback": false
+      },
+      "data": {
+        "data": {
+          "frames": 59,
+          "meanFrameMs": 79.37627118644069,
+          "p50": 83.30000000000109,
+          "p95": 150,
+          "fps": 12.598223436966174,
+          "onePercentLowFPS": 5.998800239951984
+        },
+        "engine": {
+          "quality": "fast",
+          "autoLod": 0,
+          "fullBytes": 43578032,
+          "lodBytes": 11607272,
+          "source": "author's licensed CC0 Panzergrenadier",
+          "frames": 127,
+          "actorRenderMs": 1.2000000476837158,
+          "realBots": 8,
+          "renderScale": 0.68,
+          "shadowCpuMs": 0.1,
+          "vfxCpuMs": 0,
+          "loadMs": 1926.3000000715256,
+          "decodeMs": 166.40000009536743,
+          "downloadedBytes": 11607272,
+          "fps": 16.63,
+          "frameP95Ms": 70,
+          "sceneMs": 1.84,
+          "aiMs": 0.19
+        },
+        "artist": {
+          "state": "loaded",
+          "germanSource": "Britdawgmasterfunk CC0 original + ChatGPT-authored 3D field kit",
+          "sovietSource": "Original Soviet-style modeled SSh helmet / canvas haversack / bedroll / pouches over authorized CC0 artist rig (not independent scanned Soviet soldier)",
+          "artistBots": 8,
+          "german": 4,
+          "soviet": 4,
+          "fallback": 0,
+          "showcase": true,
+          "visible": 8,
+          "playerSource": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget",
+          "sovietInterim": {
+            "triangles": 12189,
+            "bytes": 1948888,
+            "source": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget"
+          },
+          "germanLOD": {
+            "triangles": 15991,
+            "bytes": 4884988,
+            "source": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget"
+          }
+        },
+        "draws": {
+          "drawCalls": 74,
+          "triangles": 127625,
+          "shadowDrawCalls": 10,
+          "shadowTriangles": 9210,
+          "actorDrawCalls": 62,
+          "actorTriangles": 113045,
+          "frames": 127,
+          "gpuTimerSupported": true,
+          "gpuMs": null,
+          "gpuMemoryBytes": null,
+          "gpuMemorySource": "WebGL does not report GPU memory use"
+        },
+        "feedback": {
+          "received": 0,
+          "dealt": 0,
+          "headshots": 0,
+          "ignoredDuplicate": 0,
+          "processed": 0,
+          "playerHpLast": 100,
+          "enabled": false,
+          "lastPart": null,
+          "lastDirection": null,
+          "motionReduced": false,
+          "activeContacts": 0,
+          "hitMarkerVisible": false,
+          "damageIndicatorVisible": false
+        }
+      }
+    },
+    {
+      "id": "E",
+      "count": 8,
+      "shoot": true,
+      "feedback": true,
+      "setup": {
+        "count": 8,
+        "mode": "tdm",
+        "feedback": true
+      },
+      "data": {
+        "data": {
+          "frames": 58,
+          "meanFrameMs": 80.74310344827587,
+          "p50": 83.30000000000018,
+          "p95": 150,
+          "fps": 12.384958681215432,
+          "onePercentLowFPS": 6.662225183211176
+        },
+        "engine": {
+          "quality": "fast",
+          "autoLod": 0,
+          "fullBytes": 43578032,
+          "lodBytes": 11607272,
+          "source": "author's licensed CC0 Panzergrenadier",
+          "frames": 122,
+          "actorRenderMs": 0.8000000715255737,
+          "realBots": 7,
+          "renderScale": 0.68,
+          "shadowCpuMs": 0,
+          "vfxCpuMs": 0,
+          "loadMs": 2083.9000000953674,
+          "decodeMs": 254.5,
+          "downloadedBytes": 11607272,
+          "fps": 16.08,
+          "frameP95Ms": 70,
+          "sceneMs": 1.93,
+          "aiMs": 0.2
+        },
+        "artist": {
+          "state": "loaded",
+          "germanSource": "Britdawgmasterfunk CC0 original + ChatGPT-authored 3D field kit",
+          "sovietSource": "Original Soviet-style modeled SSh helmet / canvas haversack / bedroll / pouches over authorized CC0 artist rig (not independent scanned Soviet soldier)",
+          "artistBots": 7,
+          "german": 4,
+          "soviet": 3,
+          "fallback": 0,
+          "showcase": true,
+          "visible": 7,
+          "playerSource": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget",
+          "sovietInterim": {
+            "triangles": 12189,
+            "bytes": 1948888,
+            "source": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget"
+          },
+          "germanLOD": {
+            "triangles": 15991,
+            "bytes": 4884988,
+            "source": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget"
+          }
+        },
+        "draws": {
+          "drawCalls": 58,
+          "triangles": 108642,
+          "shadowDrawCalls": 0,
+          "shadowTriangles": 0,
+          "actorDrawCalls": 56,
+          "actorTriangles": 103248,
+          "frames": 122,
+          "gpuTimerSupported": true,
+          "gpuMs": null,
+          "gpuMemoryBytes": null,
+          "gpuMemorySource": "WebGL does not report GPU memory use"
+        },
+        "feedback": {
+          "received": 0,
+          "dealt": 0,
+          "headshots": 0,
+          "ignoredDuplicate": 0,
+          "processed": 0,
+          "playerHpLast": 100,
+          "enabled": true,
+          "lastPart": null,
+          "lastDirection": null,
+          "motionReduced": false,
+          "activeContacts": 0,
+          "hitMarkerVisible": false,
+          "damageIndicatorVisible": false
+        }
+      }
+    },
+    {
+      "id": "F",
+      "count": 8,
+      "shoot": true,
+      "feedback": true,
+      "optimized": true,
+      "setup": {
+        "count": 8,
+        "mode": "tdm",
+        "feedback": true
+      },
+      "data": {
+        "data": {
+          "frames": 56,
+          "meanFrameMs": 82.4375,
+          "p50": 83.30000000000018,
+          "p95": 150,
+          "fps": 12.130401819560273,
+          "onePercentLowFPS": 6.662225183211176
+        },
+        "engine": {
+          "quality": "fast",
+          "autoLod": 0,
+          "fullBytes": 43578032,
+          "lodBytes": 11607272,
+          "source": "author's licensed CC0 Panzergrenadier",
+          "frames": 122,
+          "actorRenderMs": 1.1999999284744263,
+          "realBots": 8,
+          "renderScale": 0.68,
+          "shadowCpuMs": 0,
+          "vfxCpuMs": 0,
+          "loadMs": 1951.5,
+          "decodeMs": 172.60000002384186,
+          "downloadedBytes": 11607272,
+          "fps": 15.95,
+          "frameP95Ms": 70,
+          "sceneMs": 1.98,
+          "aiMs": 0.21
+        },
+        "artist": {
+          "state": "loaded",
+          "germanSource": "Britdawgmasterfunk CC0 original + ChatGPT-authored 3D field kit",
+          "sovietSource": "Original Soviet-style modeled SSh helmet / canvas haversack / bedroll / pouches over authorized CC0 artist rig (not independent scanned Soviet soldier)",
+          "artistBots": 8,
+          "german": 4,
+          "soviet": 4,
+          "fallback": 0,
+          "showcase": true,
+          "visible": 8,
+          "playerSource": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget",
+          "sovietInterim": {
+            "triangles": 12189,
+            "bytes": 1948888,
+            "source": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget"
+          },
+          "germanLOD": {
+            "triangles": 15991,
+            "bytes": 4884988,
+            "source": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget"
+          }
+        },
+        "draws": {
+          "drawCalls": 64,
+          "triangles": 118415,
+          "shadowDrawCalls": 0,
+          "shadowTriangles": 0,
+          "actorDrawCalls": 62,
+          "actorTriangles": 113045,
+          "frames": 122,
+          "gpuTimerSupported": true,
+          "gpuMs": null,
+          "gpuMemoryBytes": null,
+          "gpuMemorySource": "WebGL does not report GPU memory use"
+        },
+        "feedback": {
+          "received": 0,
+          "dealt": 0,
+          "headshots": 0,
+          "ignoredDuplicate": 0,
+          "processed": 0,
+          "playerHpLast": 100,
+          "enabled": true,
+          "lastPart": null,
+          "lastDirection": null,
+          "motionReduced": false,
+          "activeContacts": 0,
+          "hitMarkerVisible": false,
+          "damageIndicatorVisible": false
+        }
+      }
+    }
+  ]
+}

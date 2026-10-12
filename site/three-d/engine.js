@@ -874,7 +874,16 @@ function shoot(){
    fxOrigin[1]+Math.tan(player.pitch)*fxDistance,
    fxOrigin[2]-Math.cos(player.yaw)*fxDistance];
  const hasSurface=explosive||["cover","muzzle-blocked","actor"].includes(fxTrace?.kind);
- weaponFX.fire({gun,muzzle:fxOrigin,target:fxImpact,yaw:player.yaw,sequence:shotSequence,impactAllowed:hasSurface});
+ // Source surface material is the actual 3D collision AABB selected by the
+ // SAME ray used for shooting. FX never invents a hit on a missed round.
+ const fxMaterial=fxTrace?.kind==="actor"?"fabric":
+  (hasSurface?AA.firstSolidHit(map,
+    [player.x,(player.eyeHeight||1.65)+(player.jumpY||0),player.z],
+    fxImpact)?.material:null)||"concrete";
+ root.KarmaWave24LastImpact={kind:fxTrace?.kind||"miss",
+   material:hasSurface?weaponFX.impactType(fxMaterial):"none",sourceMaterial:fxMaterial,shot:shotSequence};
+ weaponFX.fire({gun,muzzle:fxOrigin,target:fxImpact,yaw:player.yaw,
+   sequence:shotSequence,impactAllowed:hasSurface,impactMaterial:fxMaterial});
  let traceDamaged=false,headHit=false;
  if(trace16){
   const impact=trace16.gunCover||trace16.cameraPoint;

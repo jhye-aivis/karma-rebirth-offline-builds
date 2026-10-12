@@ -1,0 +1,50 @@
+{
+  "kar98": {
+    "file": "three-d/assets/weapons/wave24_kar98.glb",
+    "gpuMesh": "three-d/assets/weapons/wave24_kar98.mesh",
+    "triangles": 2411,
+    "meshes": 25,
+    "glbBytes": 144068,
+    "gpuBytes": 318384,
+    "author": "ChatGPT-directed original modeled Blender geometry based on prior user-approved GPT PNG 2D visual designs",
+    "originalConceptNot3D": true,
+    "historicallyCertified": false,
+    "conceptImageActualMesh": false
+  },
+  "mosin": {
+    "file": "three-d/assets/weapons/wave24_mosin.glb",
+    "gpuMesh": "three-d/assets/weapons/wave24_mosin.mesh",
+    "triangles": 2832,
+    "meshes": 26,
+    "glbBytes": 169348,
+    "gpuBytes": 373824,
+    "author": "ChatGPT-directed original modeled Blender geometry based on prior user-approved GPT PNG 2D visual designs",
+    "originalConceptNot3D": true,
+    "historicallyCertified": false,
+    "conceptImageActualMesh": false
+  },
+  "mg34": {
+    "file": "three-d/assets/weapons/wave24_mg34.glb",
+    "gpuMesh": "three-d/assets/weapons/wave24_mg34.mesh",
+    "triangles": 4100,
+    "meshes": 36,
+    "glbBytes": 243052,
+    "gpuBytes": 541200,
+    "author": "ChatGPT-directed original modeled Blender geometry based on prior user-approved GPT PNG 2D visual designs",
+    "originalConceptNot3D": true,
+    "historicallyCertified": false,
+    "conceptImageActualMesh": false
+  },
+  "dp28": {
+    "file": "three-d/assets/weapons/wave24_dp28.glb",
+    "gpuMesh": "three-d/assets/weapons/wave24_dp28.mesh",
+    "triangles": 2464,
+    "meshes": 27,
+    "glbBytes": 163444,
+    "gpuBytes": 325248,
+    "author": "ChatGPT-directed original modeled Blender geometry based on prior user-approved GPT PNG 2D visual designs",
+    "originalConceptNot3D": true,
+    "historicallyCertified": false,
+    "conceptImageActualMesh": false
+  }
+}

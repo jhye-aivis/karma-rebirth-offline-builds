@@ -49,6 +49,13 @@ jobs:
             $jump = Invoke-WebRequest -Uri "http://127.0.0.1:8877/three-d/jump.js" -UseBasicParsing
             $weaponVfx = Invoke-WebRequest -Uri "http://127.0.0.1:8877/three-d/weapon-vfx.js" -UseBasicParsing
             $weaponArt = Invoke-WebRequest -Uri "http://127.0.0.1:8877/three-d/weapon-art.js" -UseBasicParsing
+            $w24WeaponAtlas = Invoke-WebRequest -Uri "http://127.0.0.1:8877/three-d/assets/weapons/wave24_material_atlas.png" -Method Head -UseBasicParsing
+            $w24GermanAtlas = Invoke-WebRequest -Uri "http://127.0.0.1:8877/three-d/assets/characters/wave24_gear_atlas_german.png" -Method Head -UseBasicParsing
+            $w24SovietAtlas = Invoke-WebRequest -Uri "http://127.0.0.1:8877/three-d/assets/characters/wave24_gear_atlas_soviet.png" -Method Head -UseBasicParsing
+            $w24Kar98 = Invoke-WebRequest -Uri "http://127.0.0.1:8877/three-d/assets/weapons/wave24_kar98.mesh" -Method Head -UseBasicParsing
+            $w24Mosin = Invoke-WebRequest -Uri "http://127.0.0.1:8877/three-d/assets/weapons/wave24_mosin.mesh" -Method Head -UseBasicParsing
+            $w24Mg34 = Invoke-WebRequest -Uri "http://127.0.0.1:8877/three-d/assets/weapons/wave24_mg34.mesh" -Method Head -UseBasicParsing
+            $w24Dp28 = Invoke-WebRequest -Uri "http://127.0.0.1:8877/three-d/assets/weapons/wave24_dp28.mesh" -Method Head -UseBasicParsing
             $combatFX = Invoke-WebRequest -Uri "http://127.0.0.1:8877/three-d/combat-feedback.js" -UseBasicParsing
             $variants = Invoke-WebRequest -Uri "http://127.0.0.1:8877/three-d/variants.js" -UseBasicParsing
             $roleManifest = Invoke-WebRequest -Uri "http://127.0.0.1:8877/three-d/assets/characters/wave23-variants.json" -UseBasicParsing
@@ -73,6 +80,12 @@ jobs:
             if ($weaponVfx.StatusCode -ne 200 -or $weaponVfx.Content -notlike '*KarmaWeaponVFX*') { throw "Wave21 weapon effects JS missing" }
             if ($surfaceAtlas.StatusCode -ne 200) { throw "Wave21 material texture missing" }
             if ($weaponArt.StatusCode -ne 200 -or $weaponArt.Content -notlike '*KarmaWeaponArt*') { throw "Wave22 new modeled gun renderer missing" }
+            foreach ($obj in @($w24WeaponAtlas,$w24GermanAtlas,$w24SovietAtlas,$w24Kar98,$w24Mosin,$w24Mg34,$w24Dp28)) {
+              if ($obj.StatusCode -ne 200) { throw "Wave24 concept-derived original modeled 3D material/weapon file is missing" }
+            }
+            if ($weaponArt.Content -notlike '*wave24_material_atlas.png*') { throw "Wave24 GPU metal/wood sampler missing" }
+            if ($weaponVfx.Content -notlike '*impactKinds*') { throw "Wave24 collision-material impact FX missing" }
+            if ($js.Content -notlike '*KarmaWave24LastImpact*') { throw "Wave24 collision material source audit missing" }
             foreach ($obj in @($mp40,$ppsh,$mp40glb,$ppshglb,$germanW22,$sovietW22)) {
               if ($obj.StatusCode -ne 200) { throw "Wave22 original modeled 3D source mesh/GLB unavailable" }
             }
@@ -82,9 +95,9 @@ jobs:
             if ($combatFX.StatusCode -ne 200 -or $combatFX.Content -notlike '*KarmaCombatFeedback*') { throw "Wave23 hit feedback engine missing" }
             if ($variants.StatusCode -ne 200 -or $variants.Content -notlike '*KarmaWave23Variants*') { throw "Wave23 6 role runtime missing" }
             if ($roleManifest.StatusCode -ne 200 -or $roleManifest.Content -notlike '*G03*' -or $roleManifest.Content -notlike '*S03*') { throw "Wave23 6 role JSON manifest missing" }
-            if ($response.Content -notlike '*wave23*') { throw "Wave23 game entry not updated" }
+            if ($response.Content -notlike '*wave24*') { throw "Wave24 original game entry not updated" }
             if ($response.Content -notlike '*Space*') { throw "Wave21 Space controls not discoverable" }
-            Write-Host "WINDOWS SERVER PASS / 6 SKINNED ROLE SLOTS / SINGLE ATLAS PER FACTION / COMBAT FEEDBACK / SPACE / MODELED MP40 PPSh"
+            Write-Host "WINDOWS SERVER PASS / WAVE24 6 3D WEAPONS / NEW GER+SOVET 1024 MATERIALS / 5 IMPACT MATERIALS / 64 BONE RIGS"
           } finally {
             Stop-Process -Id $server.Id -Force -ErrorAction SilentlyContinue
           }
@@ -117,4 +130,4 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" "KARMA_REBIRTH_${GITHUB_REF_NAME}_Windows_Offline.zip" --title "KARMA REBIRTH $GITHUB_REF_NAME — 6 Rigged Loadouts + Hit Feedback" --notes "Wave23: original Blender 3D German G01-G03 / Soviet-styled S01-S03 gear sets, one CC0 original-derived shared 64-bone GLB per faction with selected role equipment/atlas, authoritative TDM damage events drive 3D skinned hit reactions, outgoing hitmarker, incoming directional HUD and reduced motion. Wave22 original modeled MP40/PPSh and Wave21 jump remain. Mac Chrome software SwiftShader 8-bot FPS remains ~12-13 despite CPU scene optimization; NO claimed 60FPS or user's Windows GPU test. Head-only hit classification uses geometry sphere; arms/legs classified torso because no per-bone hitboxes. Soviet outfit still German CC0 source derivative, not independently licensed artist USSR character. Windows CI is HTTP/PowerShell smoke, NOT actual Windows GPU gameplay. See WAVE23_RESULT.md and user local COMPARE_WINDOWS.bat."
+          gh release create "$GITHUB_REF_NAME" "KARMA_REBIRTH_${GITHUB_REF_NAME}_Windows_Offline.zip" --title "KARMA REBIRTH $GITHUB_REF_NAME — Concept-Derived Playable 3D Art" --notes "Wave24: actually modeled 3D German G01-G03 and Soviet-styled S01-S03 enhanced gear with 1024x1024 original procedural cloth/steel/leather texture atlas, author-made real MP40+PPSh, NEW Kar98k/Mosin/MG34/DP28 mechanical models and one shared 1024x256 steel/Bakelite/walnut GPU texture, game-real collision-material metal/brick/concrete/wood/fabric impact VFX and existing player directional damage/hitmarker. User concept image sheets are 2D references ONLY, not automatically imported as rigged 3D or commercially scanned assets. Soviet body remains CC0 German-artist source derived, NOT a certified distinct historical Soviet model. Existing maps still box/blockout architecture. Real Mac Chrome SwiftShader 8-AI about 12-13 FPS, NO claimed Windows 60FPS/hardware result. Windows Actions validates PowerShell and local HTTP content, NOT GPU-play performance. See WAVE24_RESULT.md, user should run COMPARE_WINDOWS.bat locally."

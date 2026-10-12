@@ -14,6 +14,24 @@
   melee:{flash:0,sparks:1,dust:1,brass:0,tracer:0,smoke:0}
  });
  const MAX_PARTICLES=72;
+ // Wave24 visuals from original ChatGPT-created WWII VFX concept references.
+ // Materials are derived from VERIFIED game ray hits, never from particle ray
+ // guesses. These types only change cosmetics, not damage or collision.
+ const impactKinds=Object.freeze({
+  metal:{dust:"metalDust",sparks:1.0},
+  concrete:{dust:"concreteDust",sparks:.08},
+  brick:{dust:"brickDust",sparks:.04},
+  wood:{dust:"woodChip",sparks:0},
+  fabric:{dust:"fabricDust",sparks:0}
+ });
+ function impactType(token){
+  const kind=String(token||"").toLowerCase();
+  if(/container|metal|steel|rust|rail|pipe|tin|lintel|chimney/.test(kind))return "metal";
+  if(/brick|factorywall|stone|sandstone|arch|ochre/.test(kind))return "brick";
+  if(/wood|crate|plank/.test(kind))return "wood";
+  if(/fabric|actor|soldier|body|flesh/.test(kind))return "fabric";
+  return "concrete";
+ }
  function create(gl=null){
   const particles=[],flashes=[],counters={shots:0,byKind:{},peakParticles:0,expired:0};
   // Camera-facing depth-tested soft particles avoid opaque Minecraft-like
@@ -57,8 +75,9 @@ void main(){
   function particle(pos,kind,seed,index,life,size,velocity,color){
    push({x:pos[0],y:pos[1],z:pos[2],vx:velocity[0],vy:velocity[1],vz:velocity[2],ttl:life,life,kind,size,material:color,seed,index});
   }
-  function fire({gun,muzzle,target,yaw=0,sequence=0,impactAllowed=true}){
+  function fire({gun,muzzle,target,yaw=0,sequence=0,impactAllowed=true,impactMaterial="concrete"}){
    const kind=gun?.kind||"smg",pf=profiles[kind]||profiles.smg;
+   const impactName=impactType(impactMaterial),contact=impactKinds[impactName];
    const a=Array.isArray(muzzle)?muzzle:[0,1.4,0],b=Array.isArray(target)?target:[a[0]+Math.sin(yaw)*12,a[1],a[2]-Math.cos(yaw)*12];
    counters.shots++;counters.byKind[kind]=(counters.byKind[kind]||0)+1;
    if(pf.flash>0){
@@ -77,22 +96,22 @@ void main(){
    const brassOrigin=[a[0]-direct[0]*.65+Math.cos(yaw)*.12,a[1]-.12,a[2]-direct[2]*.65+Math.sin(yaw)*.12];
    for(let i=0;i<pf.brass;i++)particle(brassOrigin,kind,sequence,i,.36,.035,
     [Math.cos(yaw)*1.2+.3,(1.7+rand(sequence,i)*.7),Math.sin(yaw)*1.2+.15],"brass");
-   for(let i=0;i<(impactAllowed?pf.sparks:0);i++){
+   for(let i=0;i<(impactAllowed?Math.round(pf.sparks*contact.sparks):0);i++){
     const k=sequence*11+i,v=rand(k,2)*Math.PI*2,s=.4+rand(k,3)*3;
     particle(b,kind,k,i,.14+rand(k,4)*.24,.014+rand(k,5)*.018,
      [Math.cos(v)*s,Math.sin(v)*s*.3+.9,Math.sin(v)*s],"spark");
    }
-   for(let i=0;i<(impactAllowed?pf.dust:0);i++){
+   for(let i=0;i<(impactAllowed?Math.min(12,pf.dust+(impactName==="wood"?2:0)):0);i++){
     const k=sequence*19+i,v=rand(k,4)*Math.PI*2,s=.1+rand(k,6)*.55;
     particle(b,kind,k,i,.27+rand(k,7)*.35,.08+rand(k,8)*.05,
-     [Math.cos(v)*s,rand(k,5)*.7,Math.sin(v)*s],"dust");
+     [Math.cos(v)*s,rand(k,5)*.7,Math.sin(v)*s],contact.dust);
    }
    if(pf.smoke>0){
     particle(a,kind,sequence,0,.38+pf.smoke*.28,.10+pf.smoke*.17,
       [direct[0]*.24,.48,direct[2]*.24],"smoke");
    }
    counters.peakParticles=Math.max(counters.peakParticles,particles.length);
-   return {kind,flash:pf.flash,count:particles.length,profile:pf};
+   return {kind,flash:pf.flash,count:particles.length,profile:pf,impactType:impactName};
   }
   function step(dt){
    dt=Math.max(0,Math.min(.07,dt));
@@ -129,14 +148,17 @@ void main(){
   function renderGPU(projection,view){
    if(!gl||!pointProgram||!(particles.length||flashes.length))return 0;
    const geometry=[];
-   const colors={smoke:[.42,.45,.44],dust:[.61,.57,.51],spark:[1.,.74,.29],brass:[.83,.65,.32]};
+    const colors={smoke:[.42,.45,.44],dust:[.61,.57,.51],
+      concreteDust:[.73,.72,.68],brickDust:[.72,.35,.22],
+      metalDust:[.48,.51,.53],woodChip:[.63,.41,.23],
+      fabricDust:[.57,.53,.38],spark:[1.,.74,.29],brass:[.83,.65,.32]};
    function add(x,y,z,c,size,alpha){geometry.push(x,y,z,...c,size,alpha);}
    for(const p of particles){
     if(p.kind==="tracer"||p.material==="brass")continue;
     const f=Math.max(0,p.ttl/p.life);
     const col=colors[p.material]||colors.dust;
     add(p.x,p.y,p.z,col,p.size*(p.material==="smoke"?(3.-f):p.material==="spark"?2.1:2.5),
-     (p.material==="spark"?.93:p.material==="dust"?.64:.43)*f);
+     (p.material==="spark"?.93:p.material==="smoke"?.43:.67)*f);
    }
    for(const f of flashes)add(f.a[0],f.a[1],f.a[2],[1.,.78,.37],f.scale*1.2,f.ttl/f.life*.76);
    if(!geometry.length)return 0;
@@ -151,7 +173,7 @@ void main(){
    gl.depthMask(true);gl.disable(gl.BLEND);
    return geometry.length/8;
   }
-  return {fire,step,draw,renderGPU,profiles,MAX_PARTICLES,get active(){return particles.length+flashes.length},get stats(){return {...counters,active:this.active}}};
+  return {fire,step,draw,renderGPU,profiles,impactKinds,impactType,MAX_PARTICLES,get active(){return particles.length+flashes.length},get stats(){return {...counters,active:this.active}}};
  }
  root.KarmaWeaponVFX={create,profiles,MAX_PARTICLES};
 })(globalThis);

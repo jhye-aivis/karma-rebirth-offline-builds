@@ -1,0 +1,381 @@
+{
+  "measured": "2026-10-12T04:11:39.371Z",
+  "renderer": "Mac headless Chrome ANGLE SwiftShader (software WebGL2), NOT user's Windows GPU",
+  "scenes": [
+    {
+      "team": "german",
+      "screenshot": "docs/screenshots/wave23-german-6-outfits-chrome.png",
+      "uniforms": {
+        "status": "loaded",
+        "german": [
+          "G01",
+          "G02",
+          "G03"
+        ],
+        "soviet": [
+          "S01",
+          "S02",
+          "S03"
+        ],
+        "resourceSharing": "one GLB + one GPU buffer for each gear mesh per faction, reused across all bots"
+      },
+      "bots": [
+        {
+          "team": "german",
+          "id": 0,
+          "role": "G01",
+          "loadout": "gasmask_canister"
+        },
+        {
+          "team": "german",
+          "id": 1,
+          "role": "G02",
+          "loadout": "large_rucksack"
+        },
+        {
+          "team": "german",
+          "id": 2,
+          "role": "G03",
+          "loadout": "small_satchel"
+        },
+        {
+          "team": "soviet",
+          "id": 3,
+          "role": "S01",
+          "loadout": "large_haversack"
+        },
+        {
+          "team": "soviet",
+          "id": 4,
+          "role": "S02",
+          "loadout": "field_straps"
+        },
+        {
+          "team": "soviet",
+          "id": 5,
+          "role": "S03",
+          "loadout": "small_satchel"
+        },
+        {
+          "team": "soviet",
+          "id": 6,
+          "role": "S01",
+          "loadout": "large_haversack"
+        }
+      ],
+      "perf": {
+        "quality": "fast",
+        "autoLod": 0,
+        "fullBytes": 43578032,
+        "lodBytes": 11607272,
+        "source": "author's licensed CC0 Panzergrenadier",
+        "frames": 34,
+        "actorRenderMs": 1,
+        "realBots": 5,
+        "renderScale": 0.68,
+        "shadowCpuMs": 0.1,
+        "vfxCpuMs": 0,
+        "loadMs": 4370.200000047684,
+        "decodeMs": 579,
+        "downloadedBytes": 11607272,
+        "fps": 16.16,
+        "frameP95Ms": 70,
+        "sceneMs": 2.41,
+        "aiMs": 0.16
+      },
+      "gpu": {
+        "drawCalls": 52,
+        "triangles": 95444,
+        "shadowDrawCalls": 9,
+        "shadowTriangles": 8718,
+        "actorDrawCalls": 41,
+        "actorTriangles": 81368,
+        "frames": 34,
+        "gpuTimerSupported": true,
+        "gpuMs": null,
+        "gpuMemoryBytes": null,
+        "gpuMemorySource": "WebGL does not report GPU memory use"
+      },
+      "ai": {
+        "state": "loaded",
+        "germanSource": "Britdawgmasterfunk CC0 original + ChatGPT-authored 3D field kit",
+        "sovietSource": "Original Soviet-style modeled SSh helmet / canvas haversack / bedroll / pouches over authorized CC0 artist rig (not independent scanned Soviet soldier)",
+        "artistBots": 5,
+        "german": 3,
+        "soviet": 2,
+        "fallback": 0,
+        "showcase": true,
+        "visible": 5,
+        "playerSource": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget",
+        "sovietInterim": {
+          "triangles": 12189,
+          "bytes": 1948888,
+          "source": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget"
+        },
+        "germanLOD": {
+          "triangles": 15991,
+          "bytes": 4884988,
+          "source": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget"
+        }
+      },
+      "weapon": "mp40",
+      "fatal": null
+    },
+    {
+      "team": "soviet",
+      "screenshot": "docs/screenshots/wave23-soviet-6-outfits-chrome.png",
+      "uniforms": {
+        "status": "loaded",
+        "german": [
+          "G01",
+          "G02",
+          "G03"
+        ],
+        "soviet": [
+          "S01",
+          "S02",
+          "S03"
+        ],
+        "resourceSharing": "one GLB + one GPU buffer for each gear mesh per faction, reused across all bots"
+      },
+      "bots": [
+        {
+          "team": "german",
+          "id": 0,
+          "role": "G01",
+          "loadout": "gasmask_canister"
+        },
+        {
+          "team": "german",
+          "id": 1,
+          "role": "G02",
+          "loadout": "large_rucksack"
+        },
+        {
+          "team": "german",
+          "id": 2,
+          "role": "G03",
+          "loadout": "small_satchel"
+        },
+        {
+          "team": "german",
+          "id": 3,
+          "role": "G01",
+          "loadout": "gasmask_canister"
+        },
+        {
+          "team": "soviet",
+          "id": 4,
+          "role": "S01",
+          "loadout": "large_haversack"
+        },
+        {
+          "team": "soviet",
+          "id": 5,
+          "role": "S02",
+          "loadout": "field_straps"
+        },
+        {
+          "team": "soviet",
+          "id": 6,
+          "role": "S03",
+          "loadout": "small_satchel"
+        }
+      ],
+      "perf": {
+        "quality": "fast",
+        "autoLod": 0,
+        "fullBytes": 43578032,
+        "lodBytes": 11607272,
+        "source": "author's licensed CC0 Panzergrenadier",
+        "frames": 100,
+        "actorRenderMs": 0.6000000238418579,
+        "realBots": 4,
+        "renderScale": 0.68,
+        "shadowCpuMs": 0,
+        "vfxCpuMs": 0,
+        "loadMs": 2417.3000000715256,
+        "decodeMs": 133.80000007152557,
+        "downloadedBytes": 11607272,
+        "fps": 16.75,
+        "frameP95Ms": 70,
+        "sceneMs": 1.94,
+        "aiMs": 0.39
+      },
+      "gpu": {
+        "drawCalls": 44,
+        "triangles": 80154,
+        "shadowDrawCalls": 9,
+        "shadowTriangles": 8718,
+        "actorDrawCalls": 33,
+        "actorTriangles": 66078,
+        "frames": 100,
+        "gpuTimerSupported": true,
+        "gpuMs": null,
+        "gpuMemoryBytes": null,
+        "gpuMemorySource": "WebGL does not report GPU memory use"
+      },
+      "ai": {
+        "state": "loaded",
+        "germanSource": "Britdawgmasterfunk CC0 original + ChatGPT-authored 3D field kit",
+        "sovietSource": "Original Soviet-style modeled SSh helmet / canvas haversack / bedroll / pouches over authorized CC0 artist rig (not independent scanned Soviet soldier)",
+        "artistBots": 4,
+        "german": 2,
+        "soviet": 2,
+        "fallback": 0,
+        "showcase": true,
+        "visible": 4,
+        "playerSource": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget",
+        "sovietInterim": {
+          "triangles": 12189,
+          "bytes": 1948888,
+          "source": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget"
+        },
+        "germanLOD": {
+          "triangles": 15991,
+          "bytes": 4884988,
+          "source": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget"
+        }
+      },
+      "weapon": "ppsh",
+      "fatal": null
+    }
+  ],
+  "events": {
+    "actualPlayerHit": {
+      "damage": [
+        {
+          "id": 1,
+          "at": 0.49160000002384197,
+          "attackerId": "player",
+          "victimId": 3,
+          "attackerTeam": "german",
+          "victimTeam": "soviet",
+          "x": 3,
+          "z": 20,
+          "attackerX": 3,
+          "attackerZ": 23,
+          "amount": 32,
+          "remainingHp": 468,
+          "part": "body",
+          "hasPrecisePart": false,
+          "material": "fabric"
+        }
+      ],
+      "feedback": {
+        "received": 0,
+        "dealt": 1,
+        "headshots": 0,
+        "ignoredDuplicate": 0,
+        "processed": 1,
+        "playerHpLast": 100,
+        "enabled": true,
+        "lastPart": "body",
+        "lastDirection": null,
+        "motionReduced": false,
+        "activeContacts": 1,
+        "hitMarkerVisible": false,
+        "damageIndicatorVisible": false
+      },
+      "ammo": "31"
+    },
+    "setup": {
+      "enemyId": 3,
+      "position": [
+        3,
+        20
+      ],
+      "player": [
+        3,
+        23
+      ],
+      "yaw": 0
+    },
+    "received": {
+      "stats": {
+        "received": 2,
+        "dealt": 1,
+        "headshots": 0,
+        "ignoredDuplicate": 0,
+        "processed": 3,
+        "playerHpLast": 76,
+        "enabled": true,
+        "lastPart": "body",
+        "lastDirection": "front",
+        "motionReduced": false,
+        "activeContacts": 0,
+        "hitMarkerVisible": false,
+        "damageIndicatorVisible": false
+      },
+      "damageEvents": [
+        {
+          "id": 1,
+          "at": 0.49160000002384197,
+          "attackerId": "player",
+          "victimId": 3,
+          "attackerTeam": "german",
+          "victimTeam": "soviet",
+          "x": 3,
+          "z": 20,
+          "attackerX": 3,
+          "attackerZ": 23,
+          "amount": 32,
+          "remainingHp": 468,
+          "part": "body",
+          "hasPrecisePart": false,
+          "material": "fabric"
+        },
+        {
+          "id": 2,
+          "at": 2.805000000023842,
+          "attackerId": 3,
+          "victimId": "player",
+          "attackerTeam": "soviet",
+          "victimTeam": "german",
+          "x": 3,
+          "z": 23,
+          "attackerX": 3,
+          "attackerZ": 20,
+          "amount": 12,
+          "remainingHp": 88,
+          "part": "body",
+          "hasPrecisePart": false,
+          "material": "fabric"
+        },
+        {
+          "id": 3,
+          "at": 5.7181000000238456,
+          "attackerId": 3,
+          "victimId": "player",
+          "attackerTeam": "soviet",
+          "victimTeam": "german",
+          "x": 3,
+          "z": 23,
+          "attackerX": 3,
+          "attackerZ": 20,
+          "amount": 12,
+          "remainingHp": 76,
+          "part": "body",
+          "hasPrecisePart": false,
+          "material": "fabric"
+        }
+      ],
+      "health": "76 HP"
+    },
+    "reducedMotion": {
+      "received": 2,
+      "dealt": 1,
+      "headshots": 0,
+      "ignoredDuplicate": 0,
+      "processed": 3,
+      "playerHpLast": 76,
+      "enabled": true,
+      "lastPart": "body",
+      "lastDirection": "front",
+      "motionReduced": true,
+      "activeContacts": 0,
+      "hitMarkerVisible": false,
+      "damageIndicatorVisible": false
+    }
+  }
+}
