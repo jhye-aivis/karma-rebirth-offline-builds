@@ -51,6 +51,7 @@ function create(){
     break;
    }
    case "hit":tone(610,.07,"square",.085,.56);break;
+   case "headshot":tone(840,.12,"square",.12,.38);tone(1150,.064,"triangle",.09,.6);break;
    case "dry":tone(380,.025,"square",.08,.63);break;
    case "reload":tone(680,.04,"triangle",.12,.73);setTimeout(()=>tone(520,.055,"triangle",.13,.67),180);break;
    case "step":noise(.048,.043,290);break;

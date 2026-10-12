@@ -1,0 +1,80 @@
+{
+  "german": {
+    "file": "three-d/assets/characters/panzergrenadier_wave23_german.glb",
+    "bytes": 4351216,
+    "sourceSkinJoints": 64,
+    "gearAtlas": {
+      "atlasMaterialsMerged": 9,
+      "beforeMeshes": 15,
+      "afterMeshes": 4,
+      "atlasPNG": "three-d/assets/characters/wave23_gear_atlas_german.png"
+    },
+    "base": "Licensed creator CC0 Panzergrenadier 64-bone Wave22 + original 3D role accessories",
+    "roles": {
+      "G01": {
+        "meshes": 1,
+        "triangles": 1460,
+        "equipmentNames": [
+          "W23_G01_Rigged_Shared_Atlas"
+        ],
+        "skinned": true
+      },
+      "G02": {
+        "meshes": 1,
+        "triangles": 1268,
+        "equipmentNames": [
+          "W23_G02_Rigged_Shared_Atlas"
+        ],
+        "skinned": true
+      },
+      "G03": {
+        "meshes": 1,
+        "triangles": 452,
+        "equipmentNames": [
+          "W23_G03_Rigged_Shared_Atlas"
+        ],
+        "skinned": true
+      }
+    },
+    "gpuSharing": "one GLB and GPU buffers per faction, variant shader role-tag filtering"
+  },
+  "soviet": {
+    "file": "three-d/assets/characters/panzergrenadier_wave23_soviet.glb",
+    "bytes": 1498172,
+    "sourceSkinJoints": 64,
+    "gearAtlas": {
+      "atlasMaterialsMerged": 10,
+      "beforeMeshes": 15,
+      "afterMeshes": 4,
+      "atlasPNG": "three-d/assets/characters/wave23_gear_atlas_soviet.png"
+    },
+    "base": "Licensed creator CC0 Panzergrenadier 64-bone Wave22 + original 3D role accessories",
+    "roles": {
+      "S01": {
+        "meshes": 1,
+        "triangles": 592,
+        "equipmentNames": [
+          "W23_S01_Rigged_Shared_Atlas"
+        ],
+        "skinned": true
+      },
+      "S02": {
+        "meshes": 1,
+        "triangles": 1276,
+        "equipmentNames": [
+          "W23_S02_Rigged_Shared_Atlas"
+        ],
+        "skinned": true
+      },
+      "S03": {
+        "meshes": 1,
+        "triangles": 436,
+        "equipmentNames": [
+          "W23_S03_Rigged_Shared_Atlas"
+        ],
+        "skinned": true
+      }
+    },
+    "gpuSharing": "one GLB and GPU buffers per faction, variant shader role-tag filtering"
+  }
+}

@@ -5,6 +5,26 @@ const canvas=document.querySelector("#viewport"),S=root.KarmaMaps3D;
 const WM=root.KarmaWeaponMotion,AA=root.KarmaAimAudit,A14=root.KarmaAim14;
 const gl=canvas.getContext("webgl2",{antialias:true,alpha:false,depth:true,powerPreference:"high-performance"});
 if(!gl){document.querySelector("#no-webgl").hidden=false;document.querySelector("#menu").hidden=true;return;}
+// Wave23 truthful draw submission counters: wraps actual GL calls, not a
+// speculative triangle estimate. CPU submit != GPU execution time.
+const gpuMeter=root.KarmaWave23GpuMetrics={
+ drawCalls:0,triangles:0,shadowDrawCalls:0,shadowTriangles:0,
+ actorDrawCalls:0,actorTriangles:0,frames:0,
+ gpuTimerSupported:!!gl.getExtension("EXT_disjoint_timer_query_webgl2"),
+ gpuMs:null,gpuMemoryBytes:null,gpuMemorySource:"WebGL does not report GPU memory use"};
+let drawPhase="world";
+for(const [name,triangleFn] of [
+ ["drawArrays",count=>count/3],["drawElements",count=>count/3]]){
+ const orig=gl[name].bind(gl);
+ gl[name]=function(mode,countOrFirst,nOrType,...args){
+  const count=name==="drawArrays"?nOrType:countOrFirst;
+  gpuMeter.drawCalls++;
+  if(mode===gl.TRIANGLES)gpuMeter.triangles+=Math.floor(triangleFn(count));
+  if(drawPhase==="shadow"){gpuMeter.shadowDrawCalls++;if(mode===gl.TRIANGLES)gpuMeter.shadowTriangles+=Math.floor(triangleFn(count));}
+  if(drawPhase==="actor"){gpuMeter.actorDrawCalls++;if(mode===gl.TRIANGLES)gpuMeter.actorTriangles+=Math.floor(triangleFn(count));}
+  return orig(mode,countOrFirst,nOrType,...args);
+ };
+}
 const VS=`#version 300 es
 precision highp float;
 in vec3 aPosition;
@@ -209,10 +229,12 @@ async function loadWave20NPC(path,key){
 }
 if(location.protocol!=="file:"&&wave18Quality!=="legacy"&&wave20NPCChoice!=="legacy"){
  Promise.all([
-  loadWave20NPC("panzergrenadier_wave22_german.glb","germanLOD"),
-  loadWave20NPC("panzergrenadier_wave22_soviet.glb","sovietInterim")
+  loadWave20NPC("panzergrenadier_wave23_german.glb","germanLOD"),
+  loadWave20NPC("panzergrenadier_wave23_soviet.glb","sovietInterim")
  ]).then(([german,soviet])=>{
    npcGermanRig=german;npcSovietRig=soviet;
+   root.KarmaWave23VariantAudit={status:"loaded",german:german.variantTags,soviet:soviet.variantTags,
+    resourceSharing:"one GLB + one GPU buffer for each gear mesh per faction, reused across all bots"};
    root.KarmaWave20NPCAxes={idle:german.handWeaponAxes(0,"idle"),walk:german.handWeaponAxes(1.2,"walk"),shoot:german.handWeaponAxes(.2,"shoot")};
    if((player.team||teamPicker.value)==="soviet")highRig=soviet;
    root.KarmaWave20NPC.state="loaded";
@@ -238,7 +260,9 @@ if(location.protocol!=="file:"&&wave18Quality!=="legacy"){
    get loadedTextures(){return result.artistMaterialsReady();}};
  }).catch(error=>{root.KarmaWave17Model={state:"failed",replaced:false,error:String(error)};console.warn("Author GLB upgrade unavailable",error);});
 }
-const gpu=gl.createBuffer();gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.enable(gl.CULL_FACE);gl.cullFace(gl.BACK);
+const gpu=gl.createBuffer(),staticGpu=gl.createBuffer();
+let staticVertexCount=0;
+gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.enable(gl.CULL_FACE);gl.cullFace(gl.BACK);
 gl.useProgram(program);gl.bindBuffer(gl.ARRAY_BUFFER,gpu);gl.enableVertexAttribArray(positionLoc);gl.enableVertexAttribArray(colorLoc);gl.enableVertexAttribArray(normalLoc);gl.enableVertexAttribArray(surfaceLoc);
 gl.vertexAttribPointer(positionLoc,3,gl.FLOAT,false,44,0);gl.vertexAttribPointer(colorLoc,3,gl.FLOAT,false,44,12);gl.vertexAttribPointer(normalLoc,3,gl.FLOAT,false,44,24);gl.vertexAttribPointer(surfaceLoc,2,gl.FLOAT,false,44,36);
 function bindStaticAttributes(){
@@ -350,6 +374,27 @@ const diagnostics=root.KarmaDiagnostics={shots:0,hits:0,blocked:0,damage:0,mode:
 const audio=root.KarmaAudio;let sensitivity=2.4,walkCadence=0,previousPlayerHP=100;
 const Jump=root.KarmaJump,weaponFX=root.KarmaWeaponVFX.create(gl);
 const weaponArt=root.KarmaWeaponArt?.create(gl)||null;
+const combatFeedback=root.KarmaCombatFeedback?.create(document.querySelector("#application"),{
+ disabled:new URLSearchParams(location.search).get("noFeedback")==="1"})||null;
+root.KarmaWave23Feedback=combatFeedback;
+const motionCheckbox=document.querySelector("#w23-reduce-motion");
+if(motionCheckbox&&combatFeedback){
+ const prefersReduced=window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches||false;
+ motionCheckbox.checked=prefersReduced;
+ combatFeedback.setMotionReduced(prefersReduced);
+ motionCheckbox.addEventListener("change",()=>combatFeedback.setMotionReduced(motionCheckbox.checked));
+}
+let lastCombatEventId=0;
+function consumeCombatDamage(){
+ if(!match||!combatFeedback||!match.damageEvents)return;
+ for(const event of match.damageEvents){
+  if(event.id<=lastCombatEventId)continue;
+  lastCombatEventId=event.id;
+  // Display enemy hits and self damage only. Enemy-vs-enemy damage remains
+  // authoritative gameplay state but cannot impersonate a player hit marker.
+  if(event.attackerId==="player"||event.victimId==="player")combatFeedback.receive(event,player);
+ }
+}
 root.KarmaWave21VFX=weaponFX;
 root.KarmaWave21Jump={grounded:true,height:0,velocity:0,jumps:0,landings:0};
 const Camera=root.KarmaCamera,cameraButton=document.querySelector("#camera-mode");
@@ -670,9 +715,15 @@ function redraw(){
   staticSceneMap=map;staticSceneVertices=[];
   pushBox(staticSceneVertices,{x:0,z:0,w:180,d:180,h:.2,y:-.24,material:"ground"});
   for(const box of map.blocks)pushEnvironmentGeometry(staticSceneVertices,box);
+  staticVertexCount=staticSceneVertices.length/11;
+  gl.bindBuffer(gl.ARRAY_BUFFER,staticGpu);
+  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(staticSceneVertices),gl.STATIC_DRAW);
+  // Static environment GL vertices remain on the GPU; never recopy/upload
+  // thousands of world triangles per requestAnimationFrame.
+  staticSceneVertices=[];
  }
- const world=staticSceneVertices.slice();
- worldBuffer=world.length/11;
+ const world=[];
+ worldBuffer=staticVertexCount;
  if(thirdPerson){
   pushBox(world,{x:player.x,z:player.z,w:.65,d:.6,h:.02,y:-.028,material:"shadow"});
   if(!highRig)pushSoldier(world,{x:player.x,z:player.z,angle:player.yaw,anim:playerWalkPhase,team:player.team||teamPicker.value,
@@ -700,6 +751,14 @@ function redraw(){
     w:dims[0],d:dims[2],h:dims[1],material:"muzzle",solid:false});
   }
  }
+ // These contact puffs are spawned only from TDM.damage receipts or actual
+ // training-target HP reduction. No speculative impact on a missed shot.
+ if(combatFeedback?.enabled)for(const hit of combatFeedback.emitEvents){
+  if(!hit.playerHit)continue;
+  const t=Math.max(.1,hit.life/.3),r=.11+.13*(1-t);
+  pushBox(world,{x:hit.x,z:hit.z,y:hit.y-r*.5,w:r,d:r,h:r,
+   material:hit.material==="metal"?"spark":"dust",solid:false});
+ }
  weaponFX.draw(world,{pushBox,pushJointLimb});
  // First-person hides the character body, but MUST still submit a modeled
  // weapon transform; the 3P hand-bone equipment helper runs only in 3P.
@@ -724,11 +783,14 @@ function pick(name){
  target=map.targets.map(([x,z])=>({x,z,hp:100}));
  if(map.id==="training")modePicker.value="practice";
  match=modePicker.value==="tdm"?T.create(map,teamPicker.value,3,difficultyPicker.value):null;
- if(match){player={...player,x:match.playerSpawn.x,z:match.playerSpawn.z,team:match.playerTeam,id:"player",kills:0,deaths:0};}
+ if(match){player={...player,x:match.playerSpawn.x,z:match.playerSpawn.z,team:match.playerTeam,id:"player",kills:0,deaths:0};
+  player.variantId=root.KarmaWave23Variants?.cycle(player.team,3)?.id||null;}
+ else player.variantId=root.KarmaWave23Variants?.cycle(teamPicker.value,0)?.id||null;
  highRig=player.team==="german"?(germanRig||npcGermanRig||legacyRig):(npcSovietRig||legacyRig);
  if(!weaponPicker.options.length||ARM.weapons[weaponPicker.value]?.team!==teamPicker.value)loadoutForTeam(teamPicker.value);
  equipWeapon(weaponPicker.value);
  aiming=false;kills=0;time=180;lastKillEvent=null;impactFX=[];shotMarkers=[];previousPlayerHP=100;
+ lastCombatEventId=0;
  playerWalkPhase=0;playerMoveSpeed=0;cameraState=null;
  document.querySelector("#application").classList.toggle("tdm",!!match);
  rebuild();redraw();top.textContent=map.title+(match?" — TEAM DEATHMATCH":" — GEOMETRY STUDY");stats.textContent="3D MAP BLOCKOUT · LAYOUT NOT VERIFIED";
@@ -813,7 +875,7 @@ function shoot(){
    fxOrigin[2]-Math.cos(player.yaw)*fxDistance];
  const hasSurface=explosive||["cover","muzzle-blocked","actor"].includes(fxTrace?.kind);
  weaponFX.fire({gun,muzzle:fxOrigin,target:fxImpact,yaw:player.yaw,sequence:shotSequence,impactAllowed:hasSurface});
- let traceDamaged=false;
+ let traceDamaged=false,headHit=false;
  if(trace16){
   const impact=trace16.gunCover||trace16.cameraPoint;
   const candidate=trace16.actor;
@@ -851,7 +913,13 @@ function shoot(){
    if(root.KarmaWave16Shot.actorEligible){
     victim=trace16.actor;
     const hpBefore=victim.hp;
-    traceDamaged=T.damage(match,victim,player,gun.damage);
+    const verifiedHead=root.KarmaCombatFeedback?.classifyHead(
+      [cameraState.eye.x,cameraState.eye.y,cameraState.eye.z],
+      trace16.cameraPoint,victim)===true;
+    headHit=verifiedHead;
+    traceDamaged=T.damage(match,victim,player,gun.damage,{
+     part:verifiedHead?"head":"body",material:"fabric",
+     headSphereTest:verifiedHead});
     if(traceDamaged){diagnostics.hits++;diagnostics.damage+=Math.max(0,hpBefore-victim.hp);}
    }
    if(trace16.kind==="muzzle-blocked"||trace16.kind==="cover")diagnostics.blocked++;
@@ -860,7 +928,7 @@ function shoot(){
    victim=T.playerShoot(match,player,player.yaw,gun.damage,gun.range,actualPitch,clearLine,thirdPerson?screenAim:null);
    if(victim){diagnostics.hits++;diagnostics.damage+=gun.damage;}
   }
-  if(victim)audio.play("hit");
+  if(victim)audio.play(traceDamaged&&headHit?"headshot":"hit");
   if(explosive){
    const d=victim?Math.hypot(victim.x-player.x,victim.z-player.z):Math.min(gun.range,gun.kind==="grenade"?13:20);
    const center={x:victim?.x??(player.x+Math.sin(player.yaw)*d),z:victim?.z??(player.z-Math.cos(player.yaw)*d)};
@@ -871,6 +939,7 @@ function shoot(){
    }
    impactFX.push({...center,ttl:.7});
   }
+  consumeCombatDamage();
   player.pitch=Math.min(.9,player.pitch+recoilImpulse.pitch);player.yaw+=recoilImpulse.yaw;
   syncKillImpact();redraw();if(match.status==="finished")victory();return;
  }
@@ -898,6 +967,10 @@ function shoot(){
   }
   if(explosive)impactFX.push({x:e.x,z:e.z,ttl:.7});
   if(kills===target.length){victory();}
+  if(combatFeedback&&!match)combatFeedback.receive({
+   id:++shotSequence,attackerId:"player",victimId:"training-"+target.indexOf(e),
+   x:e.x,z:e.z,amount:gun.damage,remainingHp:Math.max(0,e.hp),
+   part:"body",hasPrecisePart:false,material:"fabric"},player);
  }
  player.pitch=Math.min(.9,player.pitch+recoilImpulse.pitch);player.yaw+=recoilImpulse.yaw;redraw();
 }
@@ -958,6 +1031,7 @@ function step(dt){
  impactFX=impactFX.filter(e=>{e.ttl-=dt;return e.ttl>0;});
  shotMarkers=shotMarkers.filter(e=>{e.ttl-=dt;return e.ttl>0;});
  weaponFX.step(dt);
+ combatFeedback?.step(dt);
  if(!active)return;
  Jump.step(player,dt);
  root.KarmaWave21Jump={grounded:player.grounded,height:player.jumpY,velocity:player.jumpVY,jumps:player.jumpCount||0,landings:player.landings||0};
@@ -965,6 +1039,8 @@ function step(dt){
  if(match){
   const tAI=performance.now();
   T.update(match,player,dt);
+  consumeCombatDamage();
+  player.hitReactionTimer=Math.max(0,(player.hitReactionTimer||0)-dt);
   if(player.hp<previousPlayerHP)audio.play(player.hp<=0?"death":"hurt");
   previousPlayerHP=player.hp;
   aiLastMs=performance.now()-tAI;
@@ -1007,6 +1083,8 @@ function mapDraw(){
 }
 function frame(now){
  const tStart=performance.now();
+ gpuMeter.drawCalls=0;gpuMeter.triangles=0;gpuMeter.shadowDrawCalls=0;
+ gpuMeter.shadowTriangles=0;gpuMeter.actorDrawCalls=0;gpuMeter.actorTriangles=0;gpuMeter.frames++;
  const dt=Math.min(.07,(now-last)/1000);last=now;step(dt);
  const nextCamera=thirdPerson?Camera.compute(map,player,true,{distance:cameraDistance}):null;
  cameraState=thirdPerson?Camera.smooth(cameraState,nextCamera,dt,!active,map,player):null;
@@ -1039,6 +1117,7 @@ function frame(now){
  // On slow systems update the 1024px sun-shadow map at 20Hz instead of 60Hz.
  // Main scene/actual shot & AI logic stay full-frame; old shadowTex is re-used.
  const shadowEvery=wave18Quality==="fast"||wave18AutoLod>=1?3:1;
+ const shadowStart=performance.now();drawPhase="shadow";
  if(root.KarmaWave18Perf.frames%shadowEvery===0){
   gl.bindFramebuffer(gl.FRAMEBUFFER,shadowFramebuffer);
   gl.viewport(0,0,SHADOW_SIZE,SHADOW_SIZE);
@@ -1047,20 +1126,34 @@ function frame(now){
   gl.bindBuffer(gl.ARRAY_BUFFER,gpu);gl.enableVertexAttribArray(shadowPosition);
   gl.vertexAttribPointer(shadowPosition,3,gl.FLOAT,false,44,0);
   gl.uniformMatrix4fv(shadowLightVP,false,lightVP);
+  gl.bindBuffer(gl.ARRAY_BUFFER,staticGpu);
+  gl.vertexAttribPointer(shadowPosition,3,gl.FLOAT,false,44,0);
+  gl.drawArrays(gl.TRIANGLES,0,staticVertexCount);
+  gl.bindBuffer(gl.ARRAY_BUFFER,gpu);
+  gl.vertexAttribPointer(shadowPosition,3,gl.FLOAT,false,44,0);
   gl.drawArrays(gl.TRIANGLES,0,sceneVertices);
   if(match&&!skinDisabled)skinned.render(skinCheck?[{id:99,team:"german",x:player.x,z:player.z-12,angle:0,anim:1.3,alive:true,speed:1}]:match.bots,null,lightVP,shadowTex,true);
  }
+ root.KarmaWave18Perf.shadowCpuMs=+(performance.now()-shadowStart).toFixed(3);
+ drawPhase="world";
  gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.viewport(0,0,w,h);
  gl.clearColor(...map.sky,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
  gl.useProgram(program);bindStaticAttributes();gl.uniformMatrix4fv(uProj,false,sceneProjection);gl.uniformMatrix4fv(uView,false,sceneView);gl.uniform3fv(uFog,map.fog);gl.uniform1f(uTime,now/1000);gl.uniform3f(uEye,thirdPerson?cameraState.eye.x:player.x,thirdPerson?cameraState.eye.y:(player.eyeHeight||1.65)+(player.jumpY||0),thirdPerson?cameraState.eye.z:player.z);
  gl.uniformMatrix4fv(uLightVP,false,lightVP);gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,shadowTex);gl.uniform1i(uShadowMap,0);
  gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,environmentAtlas);gl.uniform1i(uEnvAtlas,1);
  gl.uniform1f(uEnvReady,Number(root.KarmaWave21Environment.status==="loaded"));
+ gl.bindBuffer(gl.ARRAY_BUFFER,staticGpu);
+ for(const [loc,size,offset] of [[positionLoc,3,0],[colorLoc,3,12],[normalLoc,3,24],[surfaceLoc,2,36]]){
+  gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,size,gl.FLOAT,false,44,offset);
+ }
+ gl.drawArrays(gl.TRIANGLES,0,staticVertexCount);
+ bindStaticAttributes();
  gl.drawArrays(gl.TRIANGLES,0,sceneVertices);
  // Wave20: no more blocky visible bots. Every in-range German/Soviet NPC draws
  // an actual 64-joint creator-derived mesh, with 7k/5k triangle NPC LODs.
  // In fast mode only up to one nearest visible German NPC uses the 16k hero mesh.
  const actorStart=performance.now(),artistBots=[],fallbackBots=[],ranked=[];
+ drawPhase="actor";
  const heroMax=wave18Quality==="original"?7:wave18Quality==="balanced"?2:wave18Quality==="fast"?1:0;
  if(match&&!skinCheck&&wave20NPCChoice!=="legacy"){
   for(const bot of match.bots){
@@ -1101,7 +1194,9 @@ function frame(now){
  for(const {bot,rig} of artistBots){
   const clip=bot.shotTimer>0?"shoot":bot.reloading?"reload":bot.speed>3?"run":bot.speed>.1?"walk":"idle";
   rig.render({x:bot.x,z:bot.z,angle:bot.angle||0,phase:bot.anim||0,clip,
-   team:bot.team,projection:sceneProjection,view:sceneView,useIK:false});
+   team:bot.team,projection:sceneProjection,view:sceneView,useIK:false,
+   hitReaction:bot.alive?(bot.hitReactionTimer||0)/.22:0,hitSide:bot.hitReactionSide||1,
+   variantId:bot.variantId});
  }
  root.KarmaWave20NPC.artistBots=artistBots.length;
  root.KarmaWave20NPC.german=artistBots.filter(b=>b.bot.team==="german").length;
@@ -1130,7 +1225,9 @@ function frame(now){
    tally.preMeanMeters=tally.preSlipSum/tally.contacts;
    tally.postMeanMeters=tally.postSlipSum/tally.contacts;
   }
-  activeRig.render({x:player.x,z:player.z,y:player.jumpY||0,angle:player.yaw,phase,clip,team:player.team||teamPicker.value,projection:sceneProjection,view:sceneView});
+  activeRig.render({x:player.x,z:player.z,y:player.jumpY||0,angle:player.yaw,phase,clip,team:player.team||teamPicker.value,projection:sceneProjection,view:sceneView,
+   hitReaction:player.hp>0?(player.hitReactionTimer||0)/.22:0,hitSide:player.hitReactionSide||1,
+   variantId:player.variantId});
   root.KarmaWave19Pose={clip,foot:activeRig.getFootContact?.()||null,
     ik:activeRig.getIK?.()||null,feet:activeRig.footPoints?.(phase,clip,player.x,player.z,player.yaw)||null,
     footLock:footLock||null,player:{x:player.x,z:player.z,yaw:player.yaw,moveSpeed:playerMoveSpeed},source:activeRig.source};
@@ -1145,7 +1242,11 @@ function frame(now){
    thirdPerson, fog:map.fog});
  }
  root.KarmaWave18Perf.actorRenderMs=performance.now()-actorStart;
+ drawPhase="vfx";
+ const vfxStarted=performance.now();
  root.KarmaWave21VFXPoints=weaponFX.renderGPU(sceneProjection,sceneView);
+ root.KarmaWave18Perf.vfxCpuMs=+(performance.now()-vfxStarted).toFixed(3);
+ drawPhase="world";
  root.KarmaWave21VFXPeakPoints=Math.max(root.KarmaWave21VFXPeakPoints||0,root.KarmaWave21VFXPoints);
  root.KarmaWave18Perf.realBots=artistBots.length;
  root.KarmaWave18Perf.frames++;

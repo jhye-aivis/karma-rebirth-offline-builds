@@ -49,6 +49,13 @@ jobs:
             $jump = Invoke-WebRequest -Uri "http://127.0.0.1:8877/three-d/jump.js" -UseBasicParsing
             $weaponVfx = Invoke-WebRequest -Uri "http://127.0.0.1:8877/three-d/weapon-vfx.js" -UseBasicParsing
             $weaponArt = Invoke-WebRequest -Uri "http://127.0.0.1:8877/three-d/weapon-art.js" -UseBasicParsing
+            $combatFX = Invoke-WebRequest -Uri "http://127.0.0.1:8877/three-d/combat-feedback.js" -UseBasicParsing
+            $variants = Invoke-WebRequest -Uri "http://127.0.0.1:8877/three-d/variants.js" -UseBasicParsing
+            $roleManifest = Invoke-WebRequest -Uri "http://127.0.0.1:8877/three-d/assets/characters/wave23-variants.json" -UseBasicParsing
+            $germanW23 = Invoke-WebRequest -Uri "http://127.0.0.1:8877/three-d/assets/characters/panzergrenadier_wave23_german.glb" -Method Head -UseBasicParsing
+            $sovietW23 = Invoke-WebRequest -Uri "http://127.0.0.1:8877/three-d/assets/characters/panzergrenadier_wave23_soviet.glb" -Method Head -UseBasicParsing
+            $atlasG23 = Invoke-WebRequest -Uri "http://127.0.0.1:8877/three-d/assets/characters/wave23_gear_atlas_german.png" -Method Head -UseBasicParsing
+            $atlasS23 = Invoke-WebRequest -Uri "http://127.0.0.1:8877/three-d/assets/characters/wave23_gear_atlas_soviet.png" -Method Head -UseBasicParsing
             $surfaceAtlas = Invoke-WebRequest -Uri "http://127.0.0.1:8877/three-d/assets/environment/wave21_surface_atlas.png" -Method Head -UseBasicParsing
             $mp40 = Invoke-WebRequest -Uri "http://127.0.0.1:8877/three-d/assets/weapons/wave22_mp40.mesh" -Method Head -UseBasicParsing
             $ppsh = Invoke-WebRequest -Uri "http://127.0.0.1:8877/three-d/assets/weapons/wave22_ppsh.mesh" -Method Head -UseBasicParsing
@@ -69,9 +76,15 @@ jobs:
             foreach ($obj in @($mp40,$ppsh,$mp40glb,$ppshglb,$germanW22,$sovietW22)) {
               if ($obj.StatusCode -ne 200) { throw "Wave22 original modeled 3D source mesh/GLB unavailable" }
             }
-            if ($response.Content -notlike '*wave22*') { throw "Wave22 game entry not updated" }
+            foreach ($obj in @($germanW23,$sovietW23,$atlasG23,$atlasS23)) {
+              if ($obj.StatusCode -ne 200) { throw "Wave23 rigged 3D visual variant or shared gear atlas missing" }
+            }
+            if ($combatFX.StatusCode -ne 200 -or $combatFX.Content -notlike '*KarmaCombatFeedback*') { throw "Wave23 hit feedback engine missing" }
+            if ($variants.StatusCode -ne 200 -or $variants.Content -notlike '*KarmaWave23Variants*') { throw "Wave23 6 role runtime missing" }
+            if ($roleManifest.StatusCode -ne 200 -or $roleManifest.Content -notlike '*G03*' -or $roleManifest.Content -notlike '*S03*') { throw "Wave23 6 role JSON manifest missing" }
+            if ($response.Content -notlike '*wave23*') { throw "Wave23 game entry not updated" }
             if ($response.Content -notlike '*Space*') { throw "Wave21 Space controls not discoverable" }
-            Write-Host "WINDOWS SERVER PASS / SPACE / VFX / BLENDER MP40 PPSH AND RIGGED GERMAN SOVIET / ATLAS"
+            Write-Host "WINDOWS SERVER PASS / 6 SKINNED ROLE SLOTS / SINGLE ATLAS PER FACTION / COMBAT FEEDBACK / SPACE / MODELED MP40 PPSh"
           } finally {
             Stop-Process -Id $server.Id -Force -ErrorAction SilentlyContinue
           }
@@ -104,4 +117,4 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" "KARMA_REBIRTH_${GITHUB_REF_NAME}_Windows_Offline.zip" --title "KARMA REBIRTH $GITHUB_REF_NAME — Modeled WWII Equipment & Guns" --notes "Wave22: original Blender-modeled 3D MP40 (4,820 triangles) and PPSh (8,100 triangles) GLB/real GPU mesh, historical-style new German and Soviet helmet/equipment costume geometry skinned to existing 64-joint CC0 Panzergrenadier artist source. The Soviet is STILL German CC0 source derived, NOT a standalone period-authentic Soviet soldier. Previous ChatGPT image concept sheets were 2D visual references, NOT rigged 3D assets. Gun assets are Blender-authored original historical interpretations, NOT officially verified historical models. Wave21 Space, VFX and AI preserved. Windows runner verifies HTTP and PowerShell ONLY, NOT GPU FPS or 60FPS. For local device FPS use COMPARE_WINDOWS.bat."
+          gh release create "$GITHUB_REF_NAME" "KARMA_REBIRTH_${GITHUB_REF_NAME}_Windows_Offline.zip" --title "KARMA REBIRTH $GITHUB_REF_NAME — 6 Rigged Loadouts + Hit Feedback" --notes "Wave23: original Blender 3D German G01-G03 / Soviet-styled S01-S03 gear sets, one CC0 original-derived shared 64-bone GLB per faction with selected role equipment/atlas, authoritative TDM damage events drive 3D skinned hit reactions, outgoing hitmarker, incoming directional HUD and reduced motion. Wave22 original modeled MP40/PPSh and Wave21 jump remain. Mac Chrome software SwiftShader 8-bot FPS remains ~12-13 despite CPU scene optimization; NO claimed 60FPS or user's Windows GPU test. Head-only hit classification uses geometry sphere; arms/legs classified torso because no per-bone hitboxes. Soviet outfit still German CC0 source derivative, not independently licensed artist USSR character. Windows CI is HTTP/PowerShell smoke, NOT actual Windows GPU gameplay. See WAVE23_RESULT.md and user local COMPARE_WINDOWS.bat."

@@ -91,7 +91,12 @@ function create(gl,options={}){
  }
  const canonical=name=>period?(retarget.aliases[name]||name):name;
  const renderMesh=[];
- for(const mesh of json.meshes)for(const primitive of mesh.primitives){
+ // Blender glTF stores original DATA-BLOCK names on meshes (often "Cube.003"),
+ // while actual artist part labels W23_G01/S01 live on scene NODE names.
+ // Build the mesh→named node mapping, or ALL six gear kits render on ALL bots.
+ const meshNodeLabels=new Map();
+ json.nodes.forEach(n=>{if(n.mesh!==undefined&&n.name)meshNodeLabels.set(n.mesh,n.name);});
+ for(const [meshIndex,mesh] of json.meshes.entries())for(const primitive of mesh.primitives){
    const a=primitive.attributes;
    if(a.POSITION===undefined||a.JOINTS_0===undefined)continue;
    const pos=accessor(a.POSITION),normal=accessor(a.NORMAL),joint=accessor(a.JOINTS_0),weight=accessor(a.WEIGHTS_0),idx=accessor(primitive.indices);
@@ -108,7 +113,13 @@ function create(gl,options={}){
    const ebo=gl.createBuffer();gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ebo);
    const max=Math.max(...idx),indices=max>65535?new Uint32Array(idx):new Uint16Array(idx);
    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,indices,gl.STATIC_DRAW);
-   renderMesh.push({gpu,ebo,count:idx.length,type:max>65535?gl.UNSIGNED_INT:gl.UNSIGNED_SHORT,material:primitive.material??0});
+   // All three genuine 3D gear sets share one source armature/GPU asset per
+   // faction. Draw only the role-tagged part the current actor is wearing.
+   // Filtering mesh instances is much cheaper than loading six full CC0 GLBs.
+   const name=meshNodeLabels.get(meshIndex)||mesh.name||"";
+   const roleTag=name.match(/W23_(G0[1-3]|S0[1-3])_/);
+   renderMesh.push({gpu,ebo,count:idx.length,type:max>65535?gl.UNSIGNED_INT:gl.UNSIGNED_SHORT,
+    material:primitive.material??0,variantId:roleTag?.[1]||null,isLegacyGear:/^W22_/.test(name),name});
  }
  const vs=`#version 300 es
  precision highp float;
@@ -131,7 +142,8 @@ function create(gl,options={}){
  uniform sampler2D uFabricAlbedo;uniform sampler2D uFabricNormal;uniform sampler2D uFabricORM;
  uniform float uFabricReady;uniform float uPhotoReady;
   uniform sampler2D uArtistAlbedo;uniform sampler2D uArtistNormal;uniform sampler2D uArtistMR;
- uniform float uArtistReady;uniform float uArtistSolid;uniform vec3 uArtistSolidColor;
+ uniform float uArtistReady;uniform float uArtistNormalReady;uniform float uArtistMRReady;
+ uniform float uArtistSolid;uniform vec3 uArtistSolidColor;
  out vec4 color;
  void main(){
   vec3 sampledNormal=texture(uFabricNormal,vUV*4.).rgb*2.-1.;
@@ -163,13 +175,16 @@ function create(gl,options={}){
   // Source-authored high-resolution CC0 uniform/helmet/gear PBR, not procedural cloth.
   if(uArtistReady>.5){
    vec3 srcAlbedo=texture(uArtistAlbedo,vUV).rgb;
-   vec3 srcN=texture(uArtistNormal,vUV).rgb*2.-1.;
-   vec3 dp1=dFdx(vPosition),dp2=dFdy(vPosition);
-   vec2 dt1=dFdx(vUV),dt2=dFdy(vUV);
-   vec3 tangent=normalize(dp1*dt2.y-dp2*dt1.y);
-   vec3 bitangent=normalize(-dp1*dt2.x+dp2*dt1.x);
-   vec3 mapped=normalize(mat3(tangent,bitangent,normalize(vNormal))*srcN);
-   float artistRough=clamp(texture(uArtistMR,vUV).g,.12,1.);
+   vec3 mapped=normalize(vNormal);
+   if(uArtistNormalReady>.5){
+    vec3 srcN=texture(uArtistNormal,vUV).rgb*2.-1.;
+    vec3 dp1=dFdx(vPosition),dp2=dFdy(vPosition);
+    vec2 dt1=dFdx(vUV),dt2=dFdy(vUV);
+    vec3 tangent=normalize(dp1*dt2.y-dp2*dt1.y);
+    vec3 bitangent=normalize(-dp1*dt2.x+dp2*dt1.x);
+    mapped=normalize(mat3(tangent,bitangent,normalize(vNormal))*srcN);
+   }
+   float artistRough=uArtistMRReady>.5?clamp(texture(uArtistMR,vUV).g,.12,1.):.82;
    float lit=max(dot(mapped,l),0.);
    color=vec4(pow(srcAlbedo*(.28+.72*lit)+vec3(.035)*(1.-artistRough),vec3(.88)),1.);
    return;
@@ -187,7 +202,7 @@ function create(gl,options={}){
  function shader(kind,s){const o=gl.createShader(kind);gl.shaderSource(o,s);gl.compileShader(o);if(!gl.getShaderParameter(o,gl.COMPILE_STATUS))throw Error("CC0 rig shader "+gl.getShaderInfoLog(o));return o;}
  const program=gl.createProgram();gl.attachShader(program,shader(gl.VERTEX_SHADER,vs));gl.attachShader(program,shader(gl.FRAGMENT_SHADER,fs));gl.linkProgram(program);if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(program));
  const attrs={position:gl.getAttribLocation(program,"aPosition"),normal:gl.getAttribLocation(program,"aNormal"),joints:gl.getAttribLocation(program,"aJoint"),weights:gl.getAttribLocation(program,"aWeight"),uv:gl.getAttribLocation(program,"aUV")};
- const uni=Object.fromEntries(["uBones[0]","uProjection","uView","uWorld","uFacing","uModelScale","uFootLift","uTint","uLight","uFabricAlbedo","uFabricNormal","uFabricORM","uFabricReady","uPhotoReady","uArtistAlbedo","uArtistNormal","uArtistMR","uArtistReady","uArtistSolid","uArtistSolidColor"].map(n=>[n,gl.getUniformLocation(program,n)]));
+ const uni=Object.fromEntries(["uBones[0]","uProjection","uView","uWorld","uFacing","uModelScale","uFootLift","uTint","uLight","uFabricAlbedo","uFabricNormal","uFabricORM","uFabricReady","uPhotoReady","uArtistAlbedo","uArtistNormal","uArtistMR","uArtistReady","uArtistNormalReady","uArtistMRReady","uArtistSolid","uArtistSolidColor"].map(n=>[n,gl.getUniformLocation(program,n)]));
  const fabric={german:null,soviet:null,normal:null,orm:null,ready:{}};
  const photo={albedo:null,normal:null,roughness:null,ready:{}};
  const artistTextureState=new Map();
@@ -230,6 +245,9 @@ function create(gl,options={}){
  for(const key of ["german","soviet","normal","orm"])fabric[key]=makeTexture(key);
  for(const key of ["albedo","normal","roughness"])photo[key]=makeTexture(key,root.KarmaWW2Photo?.[key],photo.ready);
  let leftIK=new Map(),footIK=new Map(),lastIK={enabled:false,error:Infinity,iterations:0};
+ // Actor-local additive upper-body impact; zero at rest, never changes the
+ // physics capsule, aim ray, camera, or the actor's world position.
+ let activeHitReaction=0,activeHitSide=1;
  const poseCache=new Map();
  function matrixAt(id,phase,clip,cache){
   if(cache.has(id))return cache.get(id);
@@ -285,6 +303,14 @@ function create(gl,options={}){
   if(/^(index|middle|ring|pinky|thumb)_0[1-3]_[lr]$/.test(name)&&clip!=="death"){
     const curl=(clip==="shoot"?.37:clip==="reload"?.18:.26)*(name.startsWith("thumb")?.6:1);
     q=qmul(q,qaxis("x",(name.endsWith("_l")?-1:1)*curl));
+  }
+  if(activeHitReaction>0&&clip!=="death"){
+   const degree=Math.min(.16,activeHitReaction*.16);
+   if(name==="spine"||name==="chest"||name==="spine1"||name==="spine2")
+    q=qmul(q,qaxis("z",degree*activeHitSide));
+   if(name==="neck"||name==="head")q=qmul(q,qaxis("x",-degree*.26));
+   if(name==="upperarm_l"||name==="upperarm_r")
+    q=qmul(q,qaxis("x",-degree*.38));
   }
   if(leftIK.has(id))q=qmul(q,leftIK.get(id));
   if(footIK.has(id))q=qmul(q,footIK.get(id));
@@ -448,13 +474,15 @@ function create(gl,options={}){
     meanPreSlipMeters:contacts?preSlipTotal/contacts:0,maxPreSlipMeters:preSlipMax,iterations};
   return lastFootLock;
  }
- function render({x,z,y=0,angle=0,phase=0,clip="idle",team="german",projection,view,useIK=true}){
+ function render({x,z,y=0,angle=0,phase=0,clip="idle",team="german",projection,view,useIK=true,hitReaction=0,hitSide=1,variantId=null}){
   gl.useProgram(program);
   // IK belongs to the player's actual foregrip, never copy it onto enemy/allied
   // bots sharing this renderer. Quantize/reuse authentic UAL pose matrices for AI.
+  activeHitReaction=Math.min(1,Math.max(0,hitReaction||0));
+  activeHitSide=hitSide<0?-1:1;
   const savedIK=leftIK,savedFeet=footIK;
   if(!useIK){leftIK=new Map();footIK=new Map();}
-  const baked=pose(phase,clip,period&&!useIK);
+  const baked=pose(phase,clip,period&&!useIK&&activeHitReaction===0);
   if(!useIK){leftIK=savedIK;footIK=savedFeet;}
   gl.uniformMatrix4fv(uni["uBones[0]"],false,baked);
   gl.uniformMatrix4fv(uni.uProjection,false,projection);
@@ -475,6 +503,8 @@ function create(gl,options={}){
   gl.uniform1f(uni.uFabricReady,Number(photoReady||!!(fabric.ready[team]&&fabric.ready.normal&&fabric.ready.orm)));
   gl.uniform1f(uni.uPhotoReady,Number(photoReady));
   for(const m of renderMesh){
+   if(m.variantId&&m.variantId!==variantId)continue;
+   if(/^(G03|S03)$/.test(variantId||"")&&m.isLegacyGear&&/canvas|leather|tin|wool_blanket/i.test(m.name))continue;
    const skin=artistMaterials[m.material];
    gl.uniform1f(uni.uArtistSolid,Number(!!(period&&skin?.solid)));
    gl.uniform3fv(uni.uArtistSolidColor,skin?.solid||[.32,.36,.22]);
@@ -483,16 +513,20 @@ function create(gl,options={}){
      gl.activeTexture(gl.TEXTURE0+unit);gl.bindTexture(gl.TEXTURE_2D,info?.texture||null);
     }
     gl.uniform1i(uni.uArtistAlbedo,4);gl.uniform1i(uni.uArtistNormal,5);gl.uniform1i(uni.uArtistMR,6);
-    gl.uniform1f(uni.uArtistReady,Number(!!(skin.base?.ready&&skin.normal?.ready&&skin.mr?.ready)));
-   }else gl.uniform1f(uni.uArtistReady,0);
+    gl.uniform1f(uni.uArtistReady,Number(!!skin.base?.ready));
+    gl.uniform1f(uni.uArtistNormalReady,Number(!!skin.normal?.ready));
+    gl.uniform1f(uni.uArtistMRReady,Number(!!skin.mr?.ready));
+   }else{gl.uniform1f(uni.uArtistReady,0);gl.uniform1f(uni.uArtistNormalReady,0);gl.uniform1f(uni.uArtistMRReady,0);}
    gl.bindBuffer(gl.ARRAY_BUFFER,m.gpu);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,m.ebo);
    for(const [loc,size,offset] of [[attrs.position,3,0],[attrs.normal,3,12],[attrs.joints,4,24],[attrs.weights,4,40],[attrs.uv,2,56]]){
     if(loc<0)continue;gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,size,gl.FLOAT,false,64,offset);
    }
    gl.drawElements(gl.TRIANGLES,m.count,m.type,0);
   }
+  activeHitReaction=0;
  }
  return {render,jointPoint,footPoints,handWeaponAxes,setFootLocks,setLeftGrip,getIK:()=>lastIK,getFootContact:()=>lastFootContact,getFootLock:()=>lastFootLock,period,artistMaterialsReady:()=>artistMaterials.filter(m=>m.base?.ready&&m.normal?.ready&&m.mr?.ready).length,photoReady:()=>!!(photo.ready.albedo&&photo.ready.normal&&photo.ready.roughness),ualClips:Object.keys(ualClips),ualBones:ualBones.size,
+   variantTags:[...new Set(renderMesh.map(m=>m.variantId).filter(Boolean))],
    fabricReady:team=>!!(fabric.ready[team]&&fabric.ready.normal&&fabric.ready.orm),
    source:period?"Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget":"Quaternius Universal Base Characters 65-bone + real UAL1 Standard CC0 animation retarget",joints:joints.length,meshCount:renderMesh.length,triangles:renderMesh.reduce((a,m)=>a+m.count/3,0)};
 }

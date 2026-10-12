@@ -28,3 +28,5 @@ Wave 21: 전투 시작 후 Space를 누르면 점프합니다. 착지 전 재점
 
 [Wave22 - Blender 신규 3D 에셋]
 독일군 MP40 3D 모델과 소련군 PPSh-41 3D 모델을 Blender에서 자체 제작했습니다. 독일군/소련군 군장도 기존 64관절 CC0 Panzergrenadier 뼈대에 실제 새 메시로 적용했습니다. 소련군은 독일군 스켈레톤에서 제작한 스타일 모델로 독립적 역사 고증 인증 원본은 아닙니다. 게임에서 독일/소련 진영을 선택하고 1인칭/3인칭 카메라(Q)를 전환하면 실제 두 무기 모델을 확인할 수 있습니다. 원본 디자인 콘셉트는 2D 이미지이며 그 이미지를 자동으로 3D로 변환한 것은 아닙니다. Windows 실기 FPS와 GPU 렌더러 진단은 COMPARE_WINDOWS.bat 사용.
+
+[Wave23] 독일 G01~G03/소련 S01~S03 각 3종 실제 Blender 제작 군장/64관절 스킨드 GLB 모델. 실제 공격 명중 HUD(✕), 피격 방향 표시, 짧은 관절 충격, 화면 흔들림 줄이기 설정. 성능 FPS는 Windows PC에서 COMPARE_WINDOWS.bat 실행 확인: Mac SwiftShader 약 12~13FPS로 아직 60FPS 아님.

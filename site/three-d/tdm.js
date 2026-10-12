@@ -24,12 +24,15 @@ function create(map,playerTeam=TEAM_A,seed=3,difficulty="normal"){
  const spots={german:spawnPoints(map,TEAM_A),soviet:spawnPoints(map,TEAM_B)};
  const bots=[];
  for(const t of TEAMS){const n=t===playerTeam?3:4;for(let i=0;i<n;i++){
-  const p=spots[t][(i+1)%spots[t].length];bots.push(newBot(bots.length,t,p));
+  const p=spots[t][(i+1)%spots[t].length],bot=newBot(bots.length,t,p);
+  bot.variantId=root.KarmaWave23Variants?.cycle(t,i+seed)?.id||null;
+  bot.loadout=root.KarmaWave23Variants?.manifest[t]?.find(v=>v.id===bot.variantId)||null;
+  bots.push(bot);
  }}
  // Respect each map's authored camera-friendly spawn instead of first grid scan cell.
  const authored=map.spawn?{x:map.spawn[0],z:map.spawn[2]}:null;
  const pl=playerTeam===TEAM_A&&authored&&navPoint(map,authored.x,authored.z)?authored:spots[playerTeam][0];
- return {map,playerTeam,bots,playerSpawn:{...pl},score:{german:0,soviet:0},targetScore:20,limit:300,clock:300,status:"running",playerDeadTimer:0,events:[],seed,spawns:spots,tick:0,difficulty:DIFFICULTIES[difficulty]?difficulty:"normal"};
+ return {map,playerTeam,bots,playerSpawn:{...pl},score:{german:0,soviet:0},targetScore:20,limit:300,clock:300,status:"running",playerDeadTimer:0,events:[],damageEvents:[],damageSerial:0,seed,spawns:spots,tick:0,difficulty:DIFFICULTIES[difficulty]?difficulty:"normal"};
 }
 function canSee(map,from,to){
  const d=Math.hypot(to.x-from.x,to.z-from.z);
@@ -79,9 +82,28 @@ function findCover(map,bot,threat){
  }
  return best;
 }
-function damage(match,victim,attacker,amount){
+function damage(match,victim,attacker,amount,meta=null){
  if(match.status!=="running"||victim.hp<=0||victim.team===attacker.team)return false;
+ const previousHp=victim.hp;
  victim.hp=Math.max(0,victim.hp-amount);
+ // Wave23 authoritative DAMAGE event. Cosmetic clients never invent damage;
+ // 'head' is used only if precise 3D ray height was supplied by the caller.
+ // Other cases are 'body', not unverified arm/leg/head claims.
+ match.damageEvents??=[];match.damageSerial=(match.damageSerial||0)+1;
+ match.damageEvents.push({id:match.damageSerial,at:match.tick,
+   attackerId:attacker.id??"player",victimId:victim.id??"player",
+   attackerTeam:attacker.team,victimTeam:victim.team,
+   x:victim.x,z:victim.z,
+   attackerX:attacker.x,attackerZ:attacker.z,
+   amount:previousHp-victim.hp,remainingHp:victim.hp,
+   part:meta?.part==="head"?"head":"body",
+   hasPrecisePart:meta?.part==="head"&&meta?.headSphereTest===true,
+   material:meta?.material||"fabric"});
+ if(match.damageEvents.length>48)match.damageEvents.splice(0,match.damageEvents.length-48);
+ // True 64-joint reaction data is consumed only by the presentation renderer.
+ // No gameplay knockback, hitbox displacement or speed penalty is introduced.
+ victim.hitReactionTimer=.22;
+ victim.hitReactionSide=Math.sin(Math.atan2(attacker.x-victim.x,-(attacker.z-victim.z))-(victim.angle||0))<0?-1:1;
  if(victim.hp!==0)return true;
  victim.alive=false;victim.deaths=(victim.deaths||0)+1;victim.respawn=3.5;
  match.score[attacker.team]+=1;attacker.kills=(attacker.kills||0)+1;
@@ -129,6 +151,7 @@ function update(match,player,dt){
  const all=match.bots.concat(player);
  for(const b of match.bots){
   b.anim+=dt;
+  b.hitReactionTimer=Math.max(0,(b.hitReactionTimer||0)-dt);
   b.shotTimer=Math.max(0,(b.shotTimer||0)-dt);
   b.speed=0;
   if(!b.alive){b.respawn-=dt;if(b.respawn<=0)respawnBot(match,b);continue;}

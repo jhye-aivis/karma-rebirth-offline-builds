@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>KARMA REBIRTH — Wave 22 Real Blender Modeled Soldiers MP40 PPSh</title><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="tdm.css"><link rel="stylesheet" href="wave4.css"><link rel="stylesheet" href="wave5.css"></head>
+<title>KARMA REBIRTH — Wave 23 Real Character Variants and Combat Feedback</title><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="tdm.css"><link rel="stylesheet" href="wave4.css"><link rel="stylesheet" href="wave5.css"><link rel="stylesheet" href="combat-feedback.css"></head>
 <body><main id="application">
 <canvas id="viewport" aria-label="Factory, Castle, Training WebGL 3D first-person and third-person shooter"></canvas>
 <div class="scanlines"></div>
@@ -12,7 +12,7 @@
 <div id="ammo-hud" aria-live="polite"><small>INFANTRY / 1944</small><strong id="gun-name">MP 40</strong><span><b id="hud-clip">32</b> / <b id="hud-reserve">160</b></span></div>
 <div class="crosshair"><span class="north"></span><span class="west"></span><span class="east"></span><span class="south"></span></div>
 <div class="bottom"><canvas id="mini" width="156" height="156" aria-label="임시 전술 미니맵"></canvas><div class="stat"><span class="label">FIELD STATUS</span><strong id="stats">READY</strong><span>DEMO · ORIGINAL MAP DIMENSIONS UNVERIFIED</span></div></div>
-<div id="glow"></div><div class="survey-stamp">WAVE 22 / 3D BLENDER SOLDIERS · MP40 · PPSH · RIGGED EQUIPMENT</div>
+<div id="glow"></div><div class="survey-stamp">WAVE 23 / SIX UNIQUE RIGGED GEAR KITS · HIT REACTIONS · FASTER WORLD</div>
 <aside id="benchmark" hidden aria-label="Live performance metrics"><strong>LIVE PERFORMANCE</strong><span id="bench-fps">Measuring FPS…</span><span id="bench-frame">Frame time: --</span><span id="bench-render">CPU scene/render: --</span><span id="bench-ai">AI logic: --</span><small>Actual browser RAF · not GPU timestamp · Wave 05</small></aside>
 <section id="menu" aria-label="작전 메뉴" class="scrim">
   <div class="panel">
@@ -24,7 +24,7 @@
   <div class="choice-grid"><div><label for="mode-picker">GAME MODE</label><select id="mode-picker"><option value="tdm">TEAM DEATHMATCH · 4 v 4 AI</option><option value="practice">MAP PRACTICE · 훈련</option></select></div><div><label for="team-picker">FACTION</label><select id="team-picker"><option value="german">GERMANY · 독일군</option><option value="soviet">USSR · 소련군</option></select></div></div>
   <label for="difficulty-picker">AI DIFFICULTY</label><select id="difficulty-picker"><option value="normal">REGULAR — 보통</option><option value="rookie">ROOKIE — 초급</option><option value="veteran">VETERAN — 숙련</option></select>
   <label for="weapon-picker">WWII WEAPON · 원작 명칭 조사 · 공격력은 임시 게임 밸런스</label><select id="weapon-picker" aria-label="독일군·소련군 무기 선택"></select>
-  <div class="optionrow"><label class="sound-control"><input id="enable-audio" type="checkbox" checked> 효과음 켜기 (오프라인 합성)</label><label for="sensitivity">마우스 감도 <output id="sensitivity-value">2.4</output></label><input id="sensitivity" type="range" min="1" max="5" value="2.4" step=".2"></div>
+  <div class="optionrow"><label class="sound-control"><input id="enable-audio" type="checkbox" checked> 효과음 켜기 (오프라인 합성)</label><label id="w23-motion-label"><input id="w23-reduce-motion" type="checkbox"> 화면 흔들림 줄이기</label><label for="sensitivity">마우스 감도 <output id="sensitivity-value">2.4</output></label><input id="sensitivity" type="range" min="1" max="5" value="2.4" step=".2"></div>
   <div class="briefing"><b>MISSION / 1944 EASTERN FRONT</b><span>4 대 4 오프라인 팀전. 아군 3명과 함께 상대 진영 AI 4명에게 맞서 20점을 먼저 달성하세요. 원작 병과/지도/유니폼을 검증한 완성본은 아닙니다.</span></div>
   <button id="start" type="button">4 : 4 전투 시작 <span>↗</span></button>
   <p class="help">Q 1·3인칭 전환 · [ / ] 무기 변경 · 3인칭 휠 줌 · WASD 이동 · Space 점프 · 마우스 시점 · 좌클릭 사격 · 우클릭 정조준 · R 재장전 · Shift 달리기 · Ctrl 앉기 · ESC 일시정지</p>
@@ -41,4 +41,4 @@ window.addEventListener("error", function(e) {
 window.addEventListener("unhandledrejection", function(e) {
   const panel=document.querySelector("#no-webgl");if(panel){panel.hidden=false;panel.textContent="3D 초기화 거부: "+String(e.reason);}
 });
-</script><script src="maps.js?v=wave21"></script><script src="weapons.js"></script><script src="weapon-motion.js"></script><script src="weapon-art.js?v=wave22"></script><script src="weapon-vfx.js?v=wave21"></script><script src="jump.js?v=wave21"></script><script src="aim-audit.js"></script><script src="aim14.js"></script><script src="tdm.js"></script><script src="rig.js"></script><script src="camera.js"></script><script src="assets/quaternius-character-embedded.js"></script><script src="assets/materials/ww2_pbr_embedded.js"></script><script src="assets/materials/ambientcg/fabric065-photo-embedded.js"></script><script src="assets/animations/ual1-retargeted-embedded.js"></script><script src="assets/characters/panzergrenadier-ual-basis.js"></script><script src="real-character.js?v=wave22"></script><script src="skinned.js"></script><script src="audio.js"></script><script src="engine.js?v=wave22"></script><script src="wave18-diagnostics.js?v=wave22"></script></body></html>
+</script><script src="maps.js?v=wave21"></script><script src="weapons.js"></script><script src="weapon-motion.js"></script><script src="weapon-art.js?v=wave22"></script><script src="weapon-vfx.js?v=wave21"></script><script src="jump.js?v=wave21"></script><script src="aim-audit.js"></script><script src="aim14.js"></script><script src="variants.js?v=wave23"></script><script src="tdm.js?v=wave23"></script><script src="rig.js"></script><script src="camera.js"></script><script src="assets/quaternius-character-embedded.js"></script><script src="assets/materials/ww2_pbr_embedded.js"></script><script src="assets/materials/ambientcg/fabric065-photo-embedded.js"></script><script src="assets/animations/ual1-retargeted-embedded.js"></script><script src="assets/characters/panzergrenadier-ual-basis.js"></script><script src="real-character.js?v=wave23"></script><script src="skinned.js"></script><script src="audio.js"></script><script src="combat-feedback.js?v=wave23"></script><script src="engine.js?v=wave23"></script><script src="wave18-diagnostics.js?v=wave23"></script></body></html>
