@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>KARMA REBIRTH — Wave 21 Jump and WW2 Weapon FX</title><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="tdm.css"><link rel="stylesheet" href="wave4.css"><link rel="stylesheet" href="wave5.css"></head>
+<title>KARMA REBIRTH — Wave 22 Real Blender Modeled Soldiers MP40 PPSh</title><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="tdm.css"><link rel="stylesheet" href="wave4.css"><link rel="stylesheet" href="wave5.css"></head>
 <body><main id="application">
 <canvas id="viewport" aria-label="Factory, Castle, Training WebGL 3D first-person and third-person shooter"></canvas>
 <div class="scanlines"></div>
@@ -12,7 +12,7 @@
 <div id="ammo-hud" aria-live="polite"><small>INFANTRY / 1944</small><strong id="gun-name">MP 40</strong><span><b id="hud-clip">32</b> / <b id="hud-reserve">160</b></span></div>
 <div class="crosshair"><span class="north"></span><span class="west"></span><span class="east"></span><span class="south"></span></div>
 <div class="bottom"><canvas id="mini" width="156" height="156" aria-label="임시 전술 미니맵"></canvas><div class="stat"><span class="label">FIELD STATUS</span><strong id="stats">READY</strong><span>DEMO · ORIGINAL MAP DIMENSIONS UNVERIFIED</span></div></div>
-<div id="glow"></div><div class="survey-stamp">WAVE 21 / JUMP · WEAPON-CLASS VFX · SKINNED AI</div>
+<div id="glow"></div><div class="survey-stamp">WAVE 22 / 3D BLENDER SOLDIERS · MP40 · PPSH · RIGGED EQUIPMENT</div>
 <aside id="benchmark" hidden aria-label="Live performance metrics"><strong>LIVE PERFORMANCE</strong><span id="bench-fps">Measuring FPS…</span><span id="bench-frame">Frame time: --</span><span id="bench-render">CPU scene/render: --</span><span id="bench-ai">AI logic: --</span><small>Actual browser RAF · not GPU timestamp · Wave 05</small></aside>
 <section id="menu" aria-label="작전 메뉴" class="scrim">
   <div class="panel">
@@ -41,4 +41,4 @@ window.addEventListener("error", function(e) {
 window.addEventListener("unhandledrejection", function(e) {
   const panel=document.querySelector("#no-webgl");if(panel){panel.hidden=false;panel.textContent="3D 초기화 거부: "+String(e.reason);}
 });
-</script><script src="maps.js?v=wave21"></script><script src="weapons.js"></script><script src="weapon-motion.js"></script><script src="weapon-vfx.js?v=wave21"></script><script src="jump.js?v=wave21"></script><script src="aim-audit.js"></script><script src="aim14.js"></script><script src="tdm.js"></script><script src="rig.js"></script><script src="camera.js"></script><script src="assets/quaternius-character-embedded.js"></script><script src="assets/materials/ww2_pbr_embedded.js"></script><script src="assets/materials/ambientcg/fabric065-photo-embedded.js"></script><script src="assets/animations/ual1-retargeted-embedded.js"></script><script src="assets/characters/panzergrenadier-ual-basis.js"></script><script src="real-character.js?v=wave21"></script><script src="skinned.js"></script><script src="audio.js"></script><script src="engine.js?v=wave21"></script><script src="wave18-diagnostics.js?v=wave21"></script></body></html>
+</script><script src="maps.js?v=wave21"></script><script src="weapons.js"></script><script src="weapon-motion.js"></script><script src="weapon-art.js?v=wave22"></script><script src="weapon-vfx.js?v=wave21"></script><script src="jump.js?v=wave21"></script><script src="aim-audit.js"></script><script src="aim14.js"></script><script src="tdm.js"></script><script src="rig.js"></script><script src="camera.js"></script><script src="assets/quaternius-character-embedded.js"></script><script src="assets/materials/ww2_pbr_embedded.js"></script><script src="assets/materials/ambientcg/fabric065-photo-embedded.js"></script><script src="assets/animations/ual1-retargeted-embedded.js"></script><script src="assets/characters/panzergrenadier-ual-basis.js"></script><script src="real-character.js?v=wave22"></script><script src="skinned.js"></script><script src="audio.js"></script><script src="engine.js?v=wave22"></script><script src="wave18-diagnostics.js?v=wave22"></script></body></html>

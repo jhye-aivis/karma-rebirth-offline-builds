@@ -1,0 +1,349 @@
+{
+  "schema": "Karma-Wave22-actual-Chrome-3D-mesh-v1",
+  "renderer": "Mac Chrome headless SwiftShader software WebGL2, NOT Windows actual GPU",
+  "scenes": [
+    {
+      "team": "german",
+      "cam": "first",
+      "filename": "docs/screenshots/wave22-german-first-actual-chrome.png",
+      "art": {
+        "status": "loaded",
+        "source": "original Blender-modeled meshes from ChatGPT WWII reference concepts; 2D PNG references NOT 3D sources",
+        "format": "GLB + 11-float GPU mesh",
+        "models": {
+          "mp40": {
+            "vertices": 14460,
+            "triangles": 4820,
+            "bytes": 636240
+          },
+          "ppsh": {
+            "vertices": 24300,
+            "triangles": 8100,
+            "bytes": 1069200
+          }
+        },
+        "draws": 29,
+        "artistTriangles": 12920,
+        "loaded": 2,
+        "lastKind": "mp40",
+        "lastTriangles": 4820,
+        "lastPerspective": "1P"
+      },
+      "npc": {
+        "state": "loaded",
+        "germanSource": "Britdawgmasterfunk CC0 original + ChatGPT-authored 3D field kit",
+        "sovietSource": "Original Soviet-style modeled SSh helmet / canvas haversack / bedroll / pouches over authorized CC0 artist rig (not independent scanned Soviet soldier)",
+        "artistBots": 0,
+        "german": 0,
+        "soviet": 0,
+        "fallback": 0,
+        "visible": 0,
+        "sovietInterim": {
+          "triangles": 8561,
+          "bytes": 1281216,
+          "source": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget"
+        },
+        "germanLOD": {
+          "triangles": 10111,
+          "bytes": 4067720,
+          "source": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget"
+        }
+      },
+      "model": "loaded",
+      "perf": {
+        "quality": "fast",
+        "autoLod": 0,
+        "fullBytes": 43578032,
+        "lodBytes": 11607272,
+        "source": "author's licensed CC0 Panzergrenadier",
+        "frames": 34,
+        "actorRenderMs": 0,
+        "realBots": 0,
+        "renderScale": 0.68,
+        "loadMs": 2256.600000023842,
+        "decodeMs": 97.60000002384186,
+        "downloadedBytes": 11607272,
+        "fps": 19.53,
+        "frameP95Ms": 70,
+        "sceneMs": 21.46,
+        "aiMs": 0
+      },
+      "env": "loaded",
+      "error": null
+    },
+    {
+      "team": "german",
+      "cam": "third",
+      "filename": "docs/screenshots/wave22-german-third-actual-chrome.png",
+      "art": {
+        "status": "loaded",
+        "source": "original Blender-modeled meshes from ChatGPT WWII reference concepts; 2D PNG references NOT 3D sources",
+        "format": "GLB + 11-float GPU mesh",
+        "models": {
+          "mp40": {
+            "vertices": 14460,
+            "triangles": 4820,
+            "bytes": 636240
+          },
+          "ppsh": {
+            "vertices": 24300,
+            "triangles": 8100,
+            "bytes": 1069200
+          }
+        },
+        "draws": 140,
+        "artistTriangles": 12920,
+        "loaded": 2,
+        "lastKind": "mp40",
+        "lastTriangles": 4820,
+        "lastPerspective": "3P"
+      },
+      "npc": {
+        "state": "loaded",
+        "germanSource": "Britdawgmasterfunk CC0 original + ChatGPT-authored 3D field kit",
+        "sovietSource": "Original Soviet-style modeled SSh helmet / canvas haversack / bedroll / pouches over authorized CC0 artist rig (not independent scanned Soviet soldier)",
+        "artistBots": 0,
+        "german": 0,
+        "soviet": 0,
+        "fallback": 0,
+        "visible": 0,
+        "playerSource": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget",
+        "sovietInterim": {
+          "triangles": 8561,
+          "bytes": 1281216,
+          "source": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget"
+        },
+        "germanLOD": {
+          "triangles": 10111,
+          "bytes": 4067720,
+          "source": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget"
+        }
+      },
+      "model": "loaded",
+      "perf": {
+        "quality": "fast",
+        "autoLod": 0,
+        "fullBytes": 43578032,
+        "lodBytes": 11607272,
+        "source": "author's licensed CC0 Panzergrenadier",
+        "frames": 146,
+        "actorRenderMs": 0.10000002384185791,
+        "realBots": 0,
+        "renderScale": 0.68,
+        "loadMs": 1601.5,
+        "decodeMs": 98.60000002384186,
+        "downloadedBytes": 11607272,
+        "fps": 27.95,
+        "frameP95Ms": 70,
+        "sceneMs": 1.1,
+        "aiMs": 0
+      },
+      "env": "loaded",
+      "error": null
+    },
+    {
+      "team": "soviet",
+      "cam": "first",
+      "filename": "docs/screenshots/wave22-soviet-first-actual-chrome.png",
+      "art": {
+        "status": "loaded",
+        "source": "original Blender-modeled meshes from ChatGPT WWII reference concepts; 2D PNG references NOT 3D sources",
+        "format": "GLB + 11-float GPU mesh",
+        "models": {
+          "mp40": {
+            "vertices": 14460,
+            "triangles": 4820,
+            "bytes": 636240
+          },
+          "ppsh": {
+            "vertices": 24300,
+            "triangles": 8100,
+            "bytes": 1069200
+          }
+        },
+        "draws": 205,
+        "artistTriangles": 12920,
+        "loaded": 2,
+        "lastKind": "ppsh",
+        "lastTriangles": 8100,
+        "lastPerspective": "1P"
+      },
+      "npc": {
+        "state": "loaded",
+        "germanSource": "Britdawgmasterfunk CC0 original + ChatGPT-authored 3D field kit",
+        "sovietSource": "Original Soviet-style modeled SSh helmet / canvas haversack / bedroll / pouches over authorized CC0 artist rig (not independent scanned Soviet soldier)",
+        "artistBots": 0,
+        "german": 0,
+        "soviet": 0,
+        "fallback": 0,
+        "visible": 0,
+        "sovietInterim": {
+          "triangles": 8561,
+          "bytes": 1281216,
+          "source": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget"
+        },
+        "germanLOD": {
+          "triangles": 10111,
+          "bytes": 4067720,
+          "source": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget"
+        }
+      },
+      "model": "loaded",
+      "perf": {
+        "quality": "fast",
+        "autoLod": 0,
+        "fullBytes": 43578032,
+        "lodBytes": 11607272,
+        "source": "author's licensed CC0 Panzergrenadier",
+        "frames": 210,
+        "actorRenderMs": 0,
+        "realBots": 0,
+        "renderScale": 0.68,
+        "loadMs": 948.5,
+        "decodeMs": 85.60000002384186,
+        "downloadedBytes": 11607272,
+        "fps": 35.74,
+        "frameP95Ms": 50.1,
+        "sceneMs": 0.48,
+        "aiMs": 0
+      },
+      "env": "loaded",
+      "error": null
+    },
+    {
+      "team": "soviet",
+      "cam": "third",
+      "filename": "docs/screenshots/wave22-soviet-third-actual-chrome.png",
+      "art": {
+        "status": "loaded",
+        "source": "original Blender-modeled meshes from ChatGPT WWII reference concepts; 2D PNG references NOT 3D sources",
+        "format": "GLB + 11-float GPU mesh",
+        "models": {
+          "ppsh": {
+            "vertices": 24300,
+            "triangles": 8100,
+            "bytes": 1069200
+          },
+          "mp40": {
+            "vertices": 14460,
+            "triangles": 4820,
+            "bytes": 636240
+          }
+        },
+        "draws": 168,
+        "artistTriangles": 12920,
+        "loaded": 2,
+        "lastKind": "ppsh",
+        "lastTriangles": 8100,
+        "lastPerspective": "3P"
+      },
+      "npc": {
+        "state": "loaded",
+        "germanSource": "Britdawgmasterfunk CC0 original + ChatGPT-authored 3D field kit",
+        "sovietSource": "Original Soviet-style modeled SSh helmet / canvas haversack / bedroll / pouches over authorized CC0 artist rig (not independent scanned Soviet soldier)",
+        "artistBots": 0,
+        "german": 0,
+        "soviet": 0,
+        "fallback": 0,
+        "visible": 0,
+        "playerSource": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget",
+        "sovietInterim": {
+          "triangles": 8561,
+          "bytes": 1281216,
+          "source": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget"
+        },
+        "germanLOD": {
+          "triangles": 10111,
+          "bytes": 4067720,
+          "source": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget"
+        }
+      },
+      "model": "loaded",
+      "perf": {
+        "quality": "fast",
+        "autoLod": 0,
+        "fullBytes": 43578032,
+        "lodBytes": 11607272,
+        "source": "author's licensed CC0 Panzergrenadier",
+        "frames": 173,
+        "actorRenderMs": 0.09999990463256836,
+        "realBots": 0,
+        "renderScale": 0.68,
+        "loadMs": 1389.2000000476837,
+        "decodeMs": 126.20000004768372,
+        "downloadedBytes": 11607272,
+        "fps": 30.79,
+        "frameP95Ms": 70,
+        "sceneMs": 1.02,
+        "aiMs": 0
+      },
+      "env": "loaded",
+      "error": null
+    }
+  ],
+  "bots": {
+    "art": {
+      "status": "loaded",
+      "source": "original Blender-modeled meshes from ChatGPT WWII reference concepts; 2D PNG references NOT 3D sources",
+      "format": "GLB + 11-float GPU mesh",
+      "models": {
+        "mp40": {
+          "vertices": 14460,
+          "triangles": 4820,
+          "bytes": 636240
+        },
+        "ppsh": {
+          "vertices": 24300,
+          "triangles": 8100,
+          "bytes": 1069200
+        }
+      },
+      "draws": 76,
+      "artistTriangles": 12920,
+      "loaded": 2,
+      "lastKind": "mp40",
+      "lastTriangles": 4820,
+      "lastPerspective": "3P"
+    },
+    "npc": {
+      "state": "loaded",
+      "germanSource": "Britdawgmasterfunk CC0 original + ChatGPT-authored 3D field kit",
+      "sovietSource": "Original Soviet-style modeled SSh helmet / canvas haversack / bedroll / pouches over authorized CC0 artist rig (not independent scanned Soviet soldier)",
+      "artistBots": 5,
+      "german": 3,
+      "soviet": 2,
+      "fallback": 0,
+      "showcase": true,
+      "visible": 5,
+      "playerSource": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget",
+      "sovietInterim": {
+        "triangles": 8561,
+        "bytes": 1281216,
+        "source": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget"
+      },
+      "germanLOD": {
+        "triangles": 10111,
+        "bytes": 4067720,
+        "source": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget"
+      }
+    },
+    "perf": {
+      "quality": "fast",
+      "autoLod": 0,
+      "fullBytes": 43578032,
+      "lodBytes": 11607272,
+      "source": "author's licensed CC0 Panzergrenadier",
+      "frames": 81,
+      "actorRenderMs": 0.7000000476837158,
+      "realBots": 5,
+      "renderScale": 0.68,
+      "loadMs": 1965.7000000476837,
+      "decodeMs": 243.70000004768372,
+      "downloadedBytes": 11607272,
+      "fps": 16.71,
+      "frameP95Ms": 70,
+      "sceneMs": 2.6,
+      "aiMs": 0.26
+    }
+  }
+}

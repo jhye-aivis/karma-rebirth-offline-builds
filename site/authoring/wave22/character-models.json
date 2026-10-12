@@ -1,0 +1,26 @@
+{
+  "german": {
+    "file": "three-d/assets/characters/panzergrenadier_wave22_german.glb",
+    "bytes": 4067720,
+    "skinnedJoints": 64,
+    "newAccessorMeshes": 4,
+    "newClothTriangles": 2544,
+    "totalTriangles": 10191,
+    "historicallyInspired": true,
+    "exactPeriodCertified": false,
+    "source": "Britdawgmasterfunk Panzergrenadier original CC0 64-bone artist with Wave22 newly modeled uniform and equipment",
+    "reference": "Previous-turn ChatGPT generated German/Soviet 2D concept sheets; NOT imported photogrammetry or automatic 3D reconstruction"
+  },
+  "soviet": {
+    "file": "three-d/assets/characters/panzergrenadier_wave22_soviet.glb",
+    "bytes": 1281216,
+    "skinnedJoints": 64,
+    "newAccessorMeshes": 6,
+    "newClothTriangles": 3856,
+    "totalTriangles": 8721,
+    "historicallyInspired": true,
+    "exactPeriodCertified": false,
+    "source": "Britdawgmasterfunk Panzergrenadier original CC0 64-bone artist with Wave22 newly modeled uniform and equipment",
+    "reference": "Previous-turn ChatGPT generated German/Soviet 2D concept sheets; NOT imported photogrammetry or automatic 3D reconstruction"
+  }
+}

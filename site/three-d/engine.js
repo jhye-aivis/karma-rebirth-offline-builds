@@ -197,7 +197,7 @@ root.KarmaWave17Model={state:"loading",author:"Britdawgmasterfunk",source:"https
 // All visible combatants now receive *genuine licensed skinned artist geometry*.
 // Soviet-side outfit is explicitly a recolored/restyled stand-in derived from
 // the German CC0 source, NOT an original period-correct Soviet soldier.
-root.KarmaWave20NPC={state:"loading",germanSource:"Britdawgmasterfunk CC0 Panzergrenadier",sovietSource:"CC0 German-derived interim Soviet-side stand-in (not historic Soviet model)",artistBots:0,german:0,soviet:0,fallback:0};
+root.KarmaWave20NPC={state:"loading",germanSource:"Britdawgmasterfunk CC0 original + ChatGPT-authored 3D field kit",sovietSource:"Original Soviet-style modeled SSh helmet / canvas haversack / bedroll / pouches over authorized CC0 artist rig (not independent scanned Soviet soldier)",artistBots:0,german:0,soviet:0,fallback:0};
 async function loadWave20NPC(path,key){
  const response=await fetch("assets/characters/"+path);
  if(!response.ok)throw Error(path+" HTTP "+response.status);
@@ -209,8 +209,8 @@ async function loadWave20NPC(path,key){
 }
 if(location.protocol!=="file:"&&wave18Quality!=="legacy"&&wave20NPCChoice!=="legacy"){
  Promise.all([
-  loadWave20NPC("panzergrenadier_cc0_npc_lod.glb","germanLOD"),
-  loadWave20NPC("soviet_side_derived_cc0_interim.glb","sovietInterim")
+  loadWave20NPC("panzergrenadier_wave22_german.glb","germanLOD"),
+  loadWave20NPC("panzergrenadier_wave22_soviet.glb","sovietInterim")
  ]).then(([german,soviet])=>{
    npcGermanRig=german;npcSovietRig=soviet;
    root.KarmaWave20NPCAxes={idle:german.handWeaponAxes(0,"idle"),walk:german.handWeaponAxes(1.2,"walk"),shoot:german.handWeaponAxes(.2,"shoot")};
@@ -349,6 +349,7 @@ let lastKillEvent=null,impactFX=[],shotMarkers=[];
 const diagnostics=root.KarmaDiagnostics={shots:0,hits:0,blocked:0,damage:0,mode:"client-local-only"};
 const audio=root.KarmaAudio;let sensitivity=2.4,walkCadence=0,previousPlayerHP=100;
 const Jump=root.KarmaJump,weaponFX=root.KarmaWeaponVFX.create(gl);
+const weaponArt=root.KarmaWeaponArt?.create(gl)||null;
 root.KarmaWave21VFX=weaponFX;
 root.KarmaWave21Jump={grounded:true,height:0,velocity:0,jumps:0,landings:0};
 const Camera=root.KarmaCamera,cameraButton=document.querySelector("#camera-mode");
@@ -563,6 +564,13 @@ function pushHighRigEquipment(world){
   distance:centerTrace.cameraDistance,actorId:centerTrace.actor?.id??null
  }:null;
  root.KarmaWave12Aim={...shotSolution,photoReady:highRig?.photoReady?.()||false,muzzle:muzzleWorld,eye,magazine:magMotion,clip:selectedClip};
+ root.KarmaWave22GunPose={kind:gun.id,player:{x,z,eyeHeight:player.eyeHeight,jumpY:player.jumpY},
+   yaw,pitch:player.pitch,shoulderR,gunY,barrelBaseF,recoil,aiming,
+   reload:reload>0?Math.sin(reloadProgress*Math.PI):0};
+ // Old blocky weapon shafts are REPLACED by GPU-rendered authored Blender
+ // MP40/PPSh meshes; keep old shapes only until loading finishes or on error.
+ const realWeaponLoaded=!!weaponArt?.has(gun.id);
+ if(!realWeaponLoaded){
  if(isLauncher){
   weaponLimb(shoulder,muzzle,.13,"rifle");
   weaponLimb([shoulderR,gunY,.84],[shoulderR,gunY+.015,1.18],.18,"rifle");
@@ -603,6 +611,7 @@ function pushHighRigEquipment(world){
   else weaponLimb([shoulderR+magMotion.side,gunY-.09-magMotion.drop,.43],[shoulderR+magMotion.side,gunY-.42-magMotion.drop,.41],.056,"rifle");
  }
  if(!isLauncher)weaponLimb([shoulderR,gunY-.04,.33],[shoulderR,gunY-.24,.24],.045,"rifle");
+ }
  // Wave11: solve actual left forearm/upper-arm skinning quaternions to put the
  // model's REAL left hand on the foregrip. During reload it moves to magazine.
  const foregrip=weaponAt(shoulderR-.32,gunY+.08,.42);
@@ -692,7 +701,15 @@ function redraw(){
   }
  }
  weaponFX.draw(world,{pushBox,pushJointLimb});
- if(!thirdPerson)weaponInCamera(world);
+ // First-person hides the character body, but MUST still submit a modeled
+ // weapon transform; the 3P hand-bone equipment helper runs only in 3P.
+ if(!thirdPerson&&weaponArt?.has(gun.id)){
+  root.KarmaWave22GunPose={kind:gun.id,player:{x:player.x,z:player.z,
+    eyeHeight:player.eyeHeight,jumpY:player.jumpY},yaw:player.yaw,pitch:player.pitch,
+    aiming,reload:reload>0&&reloadTotal>0?1-reload/reloadTotal:0,
+    recoil:flash>0?Math.min(.09,flash*.65):0};
+ }
+ if(!thirdPerson && !weaponArt?.has(gun.id))weaponInCamera(world);
  sceneVertices=world.length/11;
  // CRITICAL: GPU-skinned pass binds a distinct vertex buffer. The next CPU scene upload
  // must rebind the static world buffer; otherwise it overwrites the skin vertex data
@@ -1118,6 +1135,14 @@ function frame(now){
     ik:activeRig.getIK?.()||null,feet:activeRig.footPoints?.(phase,clip,player.x,player.z,player.yaw)||null,
     footLock:footLock||null,player:{x:player.x,z:player.z,yaw:player.yaw,moveSpeed:playerMoveSpeed},source:activeRig.source};
   root.KarmaWave20NPC.playerSource=activeRig.source;
+ }
+ // One independent static GPU buffer per genuinely modeled Blender 3D weapon.
+ // This draws only the currently selected weapon; other guns keep existing
+ // gameplay meshes. 1P uses camera basis and 3P attaches to real skinned hand.
+ if(weaponArt?.has(gun.id)&&root.KarmaWave22GunPose&&player.hp>0){
+  const p=root.KarmaWave22GunPose;
+  weaponArt.draw(gun.id,{...p,projection:sceneProjection,view:sceneView,
+   thirdPerson, fog:map.fog});
  }
  root.KarmaWave18Perf.actorRenderMs=performance.now()-actorStart;
  root.KarmaWave21VFXPoints=weaponFX.renderGPU(sceneProjection,sceneView);

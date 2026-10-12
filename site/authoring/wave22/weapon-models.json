@@ -1,0 +1,22 @@
+{
+  "mp40": {
+    "file": "three-d/assets/weapons/wave22_mp40.glb",
+    "gpuMesh": "three-d/assets/weapons/wave22_mp40.mesh",
+    "triangles": 4820,
+    "meshes": 48,
+    "glbBytes": 313220,
+    "gpuBytes": 636240,
+    "author": "ChatGPT-directed original modeled Blender geometry based on prior user-approved GPT PNG 2D visual designs",
+    "originalConceptNot3D": true
+  },
+  "ppsh": {
+    "file": "three-d/assets/weapons/wave22_ppsh.glb",
+    "gpuMesh": "three-d/assets/weapons/wave22_ppsh.mesh",
+    "triangles": 8099,
+    "meshes": 67,
+    "glbBytes": 516872,
+    "gpuBytes": 1069200,
+    "author": "ChatGPT-directed original modeled Blender geometry based on prior user-approved GPT PNG 2D visual designs",
+    "originalConceptNot3D": true
+  }
+}

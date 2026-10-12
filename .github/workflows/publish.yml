@@ -48,7 +48,14 @@ jobs:
             $comparison = Invoke-WebRequest -Uri "http://127.0.0.1:8877/COMPARE_WINDOWS.html" -UseBasicParsing
             $jump = Invoke-WebRequest -Uri "http://127.0.0.1:8877/three-d/jump.js" -UseBasicParsing
             $weaponVfx = Invoke-WebRequest -Uri "http://127.0.0.1:8877/three-d/weapon-vfx.js" -UseBasicParsing
+            $weaponArt = Invoke-WebRequest -Uri "http://127.0.0.1:8877/three-d/weapon-art.js" -UseBasicParsing
             $surfaceAtlas = Invoke-WebRequest -Uri "http://127.0.0.1:8877/three-d/assets/environment/wave21_surface_atlas.png" -Method Head -UseBasicParsing
+            $mp40 = Invoke-WebRequest -Uri "http://127.0.0.1:8877/three-d/assets/weapons/wave22_mp40.mesh" -Method Head -UseBasicParsing
+            $ppsh = Invoke-WebRequest -Uri "http://127.0.0.1:8877/three-d/assets/weapons/wave22_ppsh.mesh" -Method Head -UseBasicParsing
+            $mp40glb = Invoke-WebRequest -Uri "http://127.0.0.1:8877/three-d/assets/weapons/wave22_mp40.glb" -Method Head -UseBasicParsing
+            $ppshglb = Invoke-WebRequest -Uri "http://127.0.0.1:8877/three-d/assets/weapons/wave22_ppsh.glb" -Method Head -UseBasicParsing
+            $germanW22 = Invoke-WebRequest -Uri "http://127.0.0.1:8877/three-d/assets/characters/panzergrenadier_wave22_german.glb" -Method Head -UseBasicParsing
+            $sovietW22 = Invoke-WebRequest -Uri "http://127.0.0.1:8877/three-d/assets/characters/panzergrenadier_wave22_soviet.glb" -Method Head -UseBasicParsing
             $asset = Invoke-WebRequest -Uri "http://127.0.0.1:8877/three-d/assets/characters/panzergrenadier_cc0.glb" -Method Head -UseBasicParsing
             $germanAI = Invoke-WebRequest -Uri "http://127.0.0.1:8877/three-d/assets/characters/panzergrenadier_cc0_npc_lod.glb" -Method Head -UseBasicParsing
             $opposingAI = Invoke-WebRequest -Uri "http://127.0.0.1:8877/three-d/assets/characters/soviet_side_derived_cc0_interim.glb" -Method Head -UseBasicParsing
@@ -58,8 +65,13 @@ jobs:
             if ($jump.StatusCode -ne 200 -or $jump.Content -notlike '*KarmaJump*') { throw "Wave21 Space jump JS missing" }
             if ($weaponVfx.StatusCode -ne 200 -or $weaponVfx.Content -notlike '*KarmaWeaponVFX*') { throw "Wave21 weapon effects JS missing" }
             if ($surfaceAtlas.StatusCode -ne 200) { throw "Wave21 material texture missing" }
+            if ($weaponArt.StatusCode -ne 200 -or $weaponArt.Content -notlike '*KarmaWeaponArt*') { throw "Wave22 new modeled gun renderer missing" }
+            foreach ($obj in @($mp40,$ppsh,$mp40glb,$ppshglb,$germanW22,$sovietW22)) {
+              if ($obj.StatusCode -ne 200) { throw "Wave22 original modeled 3D source mesh/GLB unavailable" }
+            }
+            if ($response.Content -notlike '*wave22*') { throw "Wave22 game entry not updated" }
             if ($response.Content -notlike '*Space*') { throw "Wave21 Space controls not discoverable" }
-            Write-Host "WINDOWS SERVER PASS / SPACE JUMP / WEAPON VFX / ATLAS / CC0 SKINNED AI"
+            Write-Host "WINDOWS SERVER PASS / SPACE / VFX / BLENDER MP40 PPSH AND RIGGED GERMAN SOVIET / ATLAS"
           } finally {
             Stop-Process -Id $server.Id -Force -ErrorAction SilentlyContinue
           }
@@ -92,4 +104,4 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" "KARMA_REBIRTH_${GITHUB_REF_NAME}_Windows_Offline.zip" --title "KARMA REBIRTH $GITHUB_REF_NAME — Space Jump + Weapon VFX" --notes "Unofficial WebGL2 FPS game. Genuine creator CC0 Panzergrenadier 64-joint German AI; Soviet-side opponent is a visibly different but German-source-derived INTERIM CC0 skin, NOT a period-authentic Soviet model. MP40/PPSh-shaped AI guns were authored inside this project from simple mechanical shapes, NOT downloaded official historical weapons. No copyrighted KARMA publisher assets included. Windows runner tests HTTP and file serving, not real GPU play."
+          gh release create "$GITHUB_REF_NAME" "KARMA_REBIRTH_${GITHUB_REF_NAME}_Windows_Offline.zip" --title "KARMA REBIRTH $GITHUB_REF_NAME — Modeled WWII Equipment & Guns" --notes "Wave22: original Blender-modeled 3D MP40 (4,820 triangles) and PPSh (8,100 triangles) GLB/real GPU mesh, historical-style new German and Soviet helmet/equipment costume geometry skinned to existing 64-joint CC0 Panzergrenadier artist source. The Soviet is STILL German CC0 source derived, NOT a standalone period-authentic Soviet soldier. Previous ChatGPT image concept sheets were 2D visual references, NOT rigged 3D assets. Gun assets are Blender-authored original historical interpretations, NOT officially verified historical models. Wave21 Space, VFX and AI preserved. Windows runner verifies HTTP and PowerShell ONLY, NOT GPU FPS or 60FPS. For local device FPS use COMPARE_WINDOWS.bat."
