@@ -3,8 +3,13 @@
 "use strict";
 const canvas=document.querySelector("#viewport"),S=root.KarmaMaps3D;
 const WM=root.KarmaWeaponMotion,AA=root.KarmaAimAudit,A14=root.KarmaAim14;
-const gl=canvas.getContext("webgl2",{antialias:true,alpha:false,depth:true,powerPreference:"high-performance"});
+const launchSettings=new URLSearchParams(location.search);
+// MSAA is a costly full-resolution resolve on software/older integrated GPUs.
+// Fast mode opts for non-MSAA WebGL; ?msaa=1 restores the previous quality.
+const useMsaa=launchSettings.get("msaa")==="1"||(!launchSettings.has("msaa")&&["balanced","original"].includes(launchSettings.get("quality")));
+const gl=canvas.getContext("webgl2",{antialias:useMsaa,alpha:false,depth:true,powerPreference:"high-performance"});
 if(!gl){document.querySelector("#no-webgl").hidden=false;document.querySelector("#menu").hidden=true;return;}
+root.KarmaWave25Raster={requestedMSAA:useMsaa,actualMSAA:gl.getContextAttributes()?.antialias??null};
 // Wave23 truthful draw submission counters: wraps actual GL calls, not a
 // speculative triangle estimate. CPU submit != GPU execution time.
 const gpuMeter=root.KarmaWave23GpuMetrics={
@@ -62,6 +67,7 @@ uniform vec3 uFogColor;
 uniform float uTime;
 uniform vec3 uEye;
 uniform sampler2D uShadowMap;
+uniform float uFastShadow;
 uniform sampler2D uEnvironmentAlbedo;
 uniform float uEnvironmentReady;
 out vec4 pixel;
@@ -113,11 +119,23 @@ void main(){
  float shadow=0.;
  if(lightPos.x>0. && lightPos.x<1. && lightPos.y>0. && lightPos.y<1. && lightPos.z>0. && lightPos.z<1.){
    float bias=max(.0015,.008*(1.-NdotL));
-   for(int iy=-1;iy<=1;iy++)for(int ix=-1;ix<=1;ix++){
-     float depth=texture(uShadowMap,lightPos.xy+vec2(float(ix),float(iy))/1024.).r;
-     shadow+=(lightPos.z-bias>depth)?1.:0.;
+   if(uFastShadow>.5){
+     // Fast mode: 4 PCF taps instead of 9, centered on the same world-space
+     // pixel. User can select the original 9 taps with ?shadowPCF=9.
+     vec2 texel=1./vec2(textureSize(uShadowMap,0));
+     for(int iy=0;iy<2;iy++)for(int ix=0;ix<2;ix++){
+       vec2 offset=(vec2(float(ix),float(iy))-vec2(.5))*texel;
+       float depth=texture(uShadowMap,lightPos.xy+offset).r;
+       shadow+=(lightPos.z-bias>depth)?1.:0.;
+     }
+     shadow*=.25;
+   }else{
+     for(int iy=-1;iy<=1;iy++)for(int ix=-1;ix<=1;ix++){
+       float depth=texture(uShadowMap,lightPos.xy+vec2(float(ix),float(iy))/1024.).r;
+       shadow+=(lightPos.z-bias>depth)?1.:0.;
+     }
+     shadow/=9.;
    }
-   shadow/=9.;
  }
  float direct=(1.-shadow)*NdotL;
  vec3 diffuse=(vec3(1.)-F)*(1.-metalness)*albedo/3.14159;
@@ -132,6 +150,7 @@ if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw new Error(gl.getProgram
 const positionLoc=gl.getAttribLocation(program,"aPosition"),colorLoc=gl.getAttribLocation(program,"aColor"),normalLoc=gl.getAttribLocation(program,"aNormal"),surfaceLoc=gl.getAttribLocation(program,"aSurface");
 const uProj=gl.getUniformLocation(program,"uProjection"),uView=gl.getUniformLocation(program,"uView"),uFog=gl.getUniformLocation(program,"uFogColor"),uTime=gl.getUniformLocation(program,"uTime"),uEye=gl.getUniformLocation(program,"uEye"),uLightVP=gl.getUniformLocation(program,"uLightViewProj"),uShadowMap=gl.getUniformLocation(program,"uShadowMap");
 const uEnvAtlas=gl.getUniformLocation(program,"uEnvironmentAlbedo"),uEnvReady=gl.getUniformLocation(program,"uEnvironmentReady");
+const uFastShadow=gl.getUniformLocation(program,"uFastShadow");
 const environmentAtlas=gl.createTexture();
 gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,environmentAtlas);
 gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,1,1,0,gl.RGB,gl.UNSIGNED_BYTE,new Uint8Array([150,145,135]));
@@ -156,7 +175,10 @@ environmentImage.onload=()=>{
 };
 environmentImage.onerror=()=>{root.KarmaWave21Environment.status="failed";};
 environmentImage.src="assets/environment/wave21_surface_atlas.png";
-const SHADOW_SIZE=1024;
+const shadowOptions=new URLSearchParams(location.search);
+const shadowFast=(shadowOptions.get("shadowPCF")==="4"||(!shadowOptions.has("shadowPCF")&&shadowOptions.get("quality")!=="balanced"&&shadowOptions.get("quality")!=="original"));
+const SHADOW_SIZE=shadowOptions.get("shadowSize")==="1024"?1024:shadowOptions.get("shadowSize")==="512"?512:(shadowFast?512:1024);
+root.KarmaWave25Shadow={resolution:SHADOW_SIZE,pcfTaps:shadowFast?4:9,updateEvery:shadowOptions.get("shadowEvery")?Math.max(1,Math.min(12,Number(shadowOptions.get("shadowEvery"))||3)):(shadowFast?4:3),gpuTiming:"pending"};
 const shadowVS=`#version 300 es
 precision highp float;
 in vec3 aPosition;
@@ -318,7 +340,75 @@ function pushCylinder(out,{x,z,radius,height,y,material,segments=10}){
    for(const p of [[x,y,z],p0,p1])emit(p,down);
  }
 }
+// Wave25: actual triangulated and normal-lit 3D architectural meshes. These
+// share the original 11-float environment material/atlas GPU buffer. Geometry
+// is generated ONCE per selected map, separate from immutable collision boxes.
+function pushArchitecturalFace(out,points,material,facing){
+ const color=palette[material]||palette.stone,surf=surfaces[material]||[.8,0];
+ const atlas=surf[1]+2*(environmentMaterials[material]||0);
+ for(let k=1;k<points.length-1;k++){
+  const verts=[points[0],points[k],points[k+1]];
+  const a=verts[0],b=verts[1],c=verts[2];
+  const u=[b[0]-a[0],b[1]-a[1],b[2]-a[2]],v=[c[0]-a[0],c[1]-a[1],c[2]-a[2]];
+  const n=[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]];
+  if(facing&&n.reduce((s,q,i)=>s+q*facing[i],0)<0){[verts[1],verts[2]]=[verts[2],verts[1]];n[0]*=-1;n[1]*=-1;n[2]*=-1;}
+  const len=Math.hypot(...n)||1;
+  for(const p of verts)out.push(...p,...color,n[0]/len,n[1]/len,n[2]/len,surf[0],atlas);
+ }
+}
+function pushArchitecture(out,item){
+ const {x,z,w,d,h,material}=item,y=item.y||0;
+ const face=(vertices,mat=material,normal)=>pushArchitecturalFace(out,vertices,mat,normal);
+ if(item.shape==="gableRoof"){
+  const ridge=y+h,edge=y+.09,x0=x-w/2,x1=x+w/2,z0=z-d/2,z1=z+d/2;
+  face([[x0,edge,z0],[x0,edge,z1],[x,ridge,z1],[x,ridge,z0]],material,[-1,1,0]);
+  face([[x,ridge,z0],[x,ridge,z1],[x1,edge,z1],[x1,edge,z0]],material,[1,1,0]);
+  face([[x0,edge,z0],[x,ridge,z0],[x1,edge,z0]],"steelLintel",[0,0,-1]);
+  face([[x1,edge,z1],[x,ridge,z1],[x0,edge,z1]],"steelLintel",[0,0,1]);
+  for(const side of [-1,1])pushBox(out,{x:x+side*w*.49,z,w:.13,d,h:.21,y:edge-.12,material:"steelLintel"});
+  return;
+ }
+ if(item.shape==="roundTower"){
+  const n=item.segments||12,r=w/2;
+  for(let k=0;k<n;k++){
+   const a=2*Math.PI*k/n,b=2*Math.PI*(k+1)/n,m=(a+b)/2;
+   const p=t=>[x+Math.cos(t)*r,z+Math.sin(t)*r];
+   const [ax,az]=p(a),[bx,bz]=p(b);
+   face([[ax,y,az],[bx,y,bz],[bx,y+h,bz],[ax,y+h,az]],material,[Math.cos(m),0,Math.sin(m)]);
+   face([[x,y+h,z],[ax,y+h,az],[bx,y+h,bz]],item.cap||material,[0,1,0]);
+   if(item.battlements&&k%2===0){
+    const radial=r*.98;
+    pushBox(out,{x:x+Math.cos(m)*radial,z:z+Math.sin(m)*radial,w:1.28,d:1.28,h:1.1,y:y+h,material:"sandstone"});
+   }
+  }
+  return;
+ }
+ if(item.shape==="buttress"){
+  const base=[[x-w/2,y,z-d/2],[x+w/2,y,z-d/2],[x+w/2,y,z+d/2],[x-w/2,y,z+d/2]];
+  const top=base.map(p=>[x+(p[0]-x)*.38,y+h,z+(p[2]-z)*.4]);
+  for(let j=0;j<4;j++){
+   const k=(j+1)%4;
+   face([base[j],base[k],top[k],top[j]],material,[(base[j][0]+base[k][0])/2-x,.4,(base[j][2]+base[k][2])/2-z]);
+  }
+  face(top,material,[0,1,0]);return;
+ }
+ if(item.shape==="archedPortal"){
+  const radius=w/2,spring=y+h-radius,front=z+d/2+.06;
+  if(!item.open)pushBox(out,{x,z:front,w:w*.86,d:.12,h:Math.max(.2,spring-y),y,material:"castleShadow"});
+  const segments=14;
+  for(let k=0;k<segments;k++){
+   const a=Math.PI*k/segments,b=Math.PI*(k+1)/segments;
+   const v=(t,r)=>[x+Math.cos(t)*r,spring+Math.sin(t)*r,front];
+   if(!item.open)face([[x,spring,front+.01],v(a,radius*.86),v(b,radius*.86)],"castleShadow",[0,0,1]);
+   face([v(a,radius*.87),v(a,radius+0.28),v(b,radius+0.28),v(b,radius*.87)],"sandstone",[0,0,1]);
+  }
+  for(const side of [-1,1])pushBox(out,{x:x+side*(radius+.12),z:front,w:.32,d:.32,h:Math.max(.3,spring-y),y,material:"sandstone"});
+  return;
+ }
+ pushBox(out,item);
+}
 function pushEnvironmentGeometry(out,item){
+ if(["gableRoof","roundTower","buttress","archedPortal"].includes(item.shape)){pushArchitecture(out,item);return;}
  if(item.shape!=="drum"){pushBox(out,item);return;}
  // A three-ring industrial steel barrel. Real curved triangles, distinct
  // damaged paint vs rolled steel rim, not a six-sided colored wall block.
@@ -716,6 +806,9 @@ function redraw(){
   pushBox(staticSceneVertices,{x:0,z:0,w:180,d:180,h:.2,y:-.24,material:"ground"});
   for(const box of map.blocks)pushEnvironmentGeometry(staticSceneVertices,box);
   staticVertexCount=staticSceneVertices.length/11;
+  root.KarmaWave25Geometry={map:map.id,staticTriangles:staticVertexCount/3,
+   architecture:map.blocks.filter(b=>["gableRoof","roundTower","buttress","archedPortal"].includes(b.shape)).reduce((a,b)=>(a[b.shape]=(a[b.shape]||0)+1,a),{}),
+   decorativeOnly:map.blocks.filter(b=>["gableRoof","roundTower","buttress","archedPortal"].includes(b.shape)).every(b=>b.solid===false)};
   gl.bindBuffer(gl.ARRAY_BUFFER,staticGpu);
   gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(staticSceneVertices),gl.STATIC_DRAW);
   // Static environment GL vertices remain on the GPU; never recopy/upload
@@ -784,6 +877,10 @@ function pick(name){
  if(map.id==="training")modePicker.value="practice";
  match=modePicker.value==="tdm"?T.create(map,teamPicker.value,3,difficultyPicker.value):null;
  if(match){player={...player,x:match.playerSpawn.x,z:match.playerSpawn.z,team:match.playerTeam,id:"player",kills:0,deaths:0};
+  // A USSR spawn is on the opposite end of the map. Using the German-facing
+  // authored yaw aimed straight at the exterior wall and hid the castle scene.
+  // Face the walkable battlefield centre for BOTH teams on map entry.
+  player.yaw=Math.atan2(-player.x,player.z);
   player.variantId=root.KarmaWave23Variants?.cycle(player.team,3)?.id||null;}
  else player.variantId=root.KarmaWave23Variants?.cycle(teamPicker.value,0)?.id||null;
  highRig=player.team==="german"?(germanRig||npcGermanRig||legacyRig):(npcSovietRig||legacyRig);
@@ -1125,7 +1222,7 @@ function frame(now){
  // Real shadow-map pass: render world geometry into a depth texture from directional sunlight.
  // On slow systems update the 1024px sun-shadow map at 20Hz instead of 60Hz.
  // Main scene/actual shot & AI logic stay full-frame; old shadowTex is re-used.
- const shadowEvery=wave18Quality==="fast"||wave18AutoLod>=1?3:1;
+ const shadowEvery=wave18Quality==="fast"||wave18AutoLod>=1?root.KarmaWave25Shadow.updateEvery:1;
  const shadowStart=performance.now();drawPhase="shadow";
  if(root.KarmaWave18Perf.frames%shadowEvery===0){
   gl.bindFramebuffer(gl.FRAMEBUFFER,shadowFramebuffer);
@@ -1148,6 +1245,7 @@ function frame(now){
  gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.viewport(0,0,w,h);
  gl.clearColor(...map.sky,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
  gl.useProgram(program);bindStaticAttributes();gl.uniformMatrix4fv(uProj,false,sceneProjection);gl.uniformMatrix4fv(uView,false,sceneView);gl.uniform3fv(uFog,map.fog);gl.uniform1f(uTime,now/1000);gl.uniform3f(uEye,thirdPerson?cameraState.eye.x:player.x,thirdPerson?cameraState.eye.y:(player.eyeHeight||1.65)+(player.jumpY||0),thirdPerson?cameraState.eye.z:player.z);
+ gl.uniform1f(uFastShadow,shadowFast?1:0);
  gl.uniformMatrix4fv(uLightVP,false,lightVP);gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,shadowTex);gl.uniform1i(uShadowMap,0);
  gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,environmentAtlas);gl.uniform1i(uEnvAtlas,1);
  gl.uniform1f(uEnvReady,Number(root.KarmaWave21Environment.status==="loaded"));
@@ -1216,12 +1314,17 @@ function frame(now){
  if(player.team==="soviet"&&npcSovietRig)highRig=npcSovietRig;
  else if(player.team==="german"&&germanRig)highRig=germanRig;
  else if(player.team==="german"&&npcGermanRig)highRig=npcGermanRig;
- if(thirdPerson&&(wave18AutoLod<2?highRig:legacyRig)){
+ // Adaptive quality may reduce model triangle count, but must never replace
+ // an already-loaded period soldier with the old generic Quaternius body.
+ // Explicit ?quality=legacy continues to use the existing legacy path.
+ const playerRig=wave18AutoLod<2?highRig:
+  ((player.team==="soviet"?npcSovietRig:(npcGermanRig||germanRig))||highRig||legacyRig);
+ if(thirdPerson&&playerRig){
   const drivenClip=player.hp<=0?"death":reload>0?"reload":shotPoseTimer>0?"shoot":keys.control||keys.c?"crouch":playerMoveSpeed>3?"run":playerMoveSpeed>.12?"walk":"idle";
   const clip=["idle","walk","run","shoot","reload","crouch","death"].includes(wave8Pose)?wave8Pose:drivenClip;
   const phase=clip==="shoot"&&!wave8Pose?Math.max(0,.25-shotPoseTimer)*2.5:
    clip==="reload"&&!wave8Pose?Math.max(0,reloadTotal-reload)*.75:playerWalkPhase;
-  const activeRig=wave18AutoLod<2?highRig:legacyRig;
+  const activeRig=playerRig;
   const footLock=activeRig.setFootLocks?.({x:player.x,z:player.z,angle:player.yaw,phase,clip,
    enabled:player.grounded&&new URLSearchParams(location.search).get("footlock")!=="0"});
   if(footLock?.contacts){

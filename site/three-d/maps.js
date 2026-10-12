@@ -65,6 +65,15 @@
     for(const [x,z] of [[-1,22],[8,22],[10,14],[-1,14]]){
       a.push(b(x,z,1.22,.65,.12,"concreteChip",false,.035));
     }
+    // Wave25: genuine 3D silhouette meshes on the existing collision walls.
+    // A pitched, deep warehouse roof, round brick stack and angled loading
+    // canopy are render-only: no changes to bot cover or player navigation.
+    a.push({...b(23,0,12.8,52,3.2,"roofRust",false,13),shape:"gableRoof"});
+    a.push({...b(24,-18,3.3,3.3,17.7,"chimney",false,13),shape:"roundTower",segments:12,cap:"chimneyStripe"});
+    a.push({...b(16.25,-9,3.9,12,1.1,"roofRust",false,6.15),shape:"gableRoof"});
+    for(const z of [-22,-11,0,11,22]){
+      a.push({...b(16.8,z,.7,.7,10.6,"sandstone",false,2.2),shape:"roundTower",segments:8});
+    }
     const metalStacks=a.filter(v=>v.material.startsWith("container")&&v.d>5);
     for(const stack of metalStacks){
       for(let i=1;i<=8;i++){
@@ -143,6 +152,21 @@
     }
     a.push(b(-9.2,21,.21,3.4,2.5,"archRed",false,3.7));
     a.push(b(9.2,18,.21,2.6,2.3,"archRed",false,3.85));
+    // Wave25: original mesh-built fortifications. Existing square tower cores
+    // remain as physical collision proxies; 12-sided masonry surfaces hide
+    // those flat cubes without letting AI cut through the walls.
+    for(const x of [-25,25])for(const z of [-25,25]){
+      a.push({...b(x,z,10.25,10.25,18.35,"stone",false,0),shape:"roundTower",segments:12,cap:"sandstone",battlements:true});
+    }
+    a.push({...b(0,-17,19.3,15.3,3.8,"roof",false,11),shape:"gableRoof"});
+    a.push({...b(0,-9.84,3.2,.6,4.8,"archRed",false,.12),shape:"archedPortal"});
+    for(const x of [-6,6])a.push({...b(x,-9.84,1.55,.46,2.8,"archRed",false,4.4),shape:"archedPortal"});
+    // A genuinely open gateway in the visible starting aisle; non-colliding
+    // to retain the existing physical routes and 4v4 AI navigability.
+    a.push({...b(0,15,5.2,.6,5.65,"sandstone",false,0),shape:"archedPortal",open:true});
+    for(const x of [-19,19])for(const z of [-12,0,12]){
+      a.push({...b(x,z,2.1,2.1,7.5,"stone",false,0),shape:"buttress"});
+    }
     return {id:"castle",title:"CASTLE",subtitle:"석조 성곽 · 과거전 가상 Blockout · 석재/루블/성벽 상세 개선",bounds:28,spawn:[0,0,21],facing:0,sky:[.39,.46,.54],ground:"ground",fog:[.49,.48,.43],blocks:a,targets:[[-12,-6],[12,-6],[-19,20],[22,-19]],sourceConfidence:"2003 WWII film supports stone walls/red inset openings as visual vocabulary; new 2026 flagstone path/arrow slits/rubble/battlements independent; Castle map identity, layout & scale unverified"};
   }
   function training(){

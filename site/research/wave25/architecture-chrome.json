@@ -1,0 +1,250 @@
+{
+  "date": "2026-10-12T05:11:32.400Z",
+  "renderer": "Mac Chrome SwiftShader software WebGL2",
+  "scenes": [
+    {
+      "map": {
+        "map": "factory",
+        "staticTriangles": 5460,
+        "architecture": {
+          "gableRoof": 2,
+          "roundTower": 6
+        },
+        "decorativeOnly": true
+      },
+      "team": "german",
+      "path": "docs/screenshots/wave25-factory-german-actual-chrome.png",
+      "title": "KARMA REBIRTH — Wave 25 Architectural 3D + Performance",
+      "msaa": {
+        "requestedMSAA": false,
+        "actualMSAA": false
+      },
+      "shadow": {
+        "resolution": 512,
+        "pcfTaps": 4,
+        "updateEvery": 4,
+        "gpuTiming": "pending"
+      },
+      "rig": {
+        "state": "loaded",
+        "germanSource": "Britdawgmasterfunk CC0 original + ChatGPT-authored 3D field kit",
+        "sovietSource": "Original Soviet-style modeled SSh helmet / canvas haversack / bedroll / pouches over authorized CC0 artist rig (not independent scanned Soviet soldier)",
+        "artistBots": 6,
+        "german": 3,
+        "soviet": 3,
+        "fallback": 0,
+        "showcase": true,
+        "visible": 6,
+        "playerSource": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget",
+        "sovietInterim": {
+          "triangles": 12189,
+          "bytes": 1948888,
+          "source": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget"
+        },
+        "germanLOD": {
+          "triangles": 15991,
+          "bytes": 4884988,
+          "source": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget"
+        }
+      },
+      "perf": {
+        "quality": "fast",
+        "autoLod": 0,
+        "fullBytes": 43578032,
+        "lodBytes": 11607272,
+        "source": "author's licensed CC0 Panzergrenadier",
+        "frames": 48,
+        "actorRenderMs": 1,
+        "realBots": 6,
+        "renderScale": 0.68,
+        "shadowCpuMs": 0,
+        "vfxCpuMs": 0,
+        "loadMs": 4052.100000023842,
+        "decodeMs": 178.39999997615814,
+        "downloadedBytes": 11607272,
+        "fps": 18.9,
+        "frameP95Ms": 70,
+        "sceneMs": 2.37,
+        "aiMs": 0.21
+      },
+      "draw": {
+        "drawCalls": 49,
+        "triangles": 96835,
+        "shadowDrawCalls": 0,
+        "shadowTriangles": 0,
+        "actorDrawCalls": 47,
+        "actorTriangles": 91261,
+        "frames": 48,
+        "gpuTimerSupported": true,
+        "gpuMs": null,
+        "gpuMemoryBytes": null,
+        "gpuMemorySource": "WebGL does not report GPU memory use"
+      },
+      "error": null
+    },
+    {
+      "map": {
+        "map": "castle",
+        "staticTriangles": 3184,
+        "architecture": {
+          "roundTower": 4,
+          "gableRoof": 1,
+          "archedPortal": 4,
+          "buttress": 6
+        },
+        "decorativeOnly": true
+      },
+      "team": "soviet",
+      "path": "docs/screenshots/wave25-castle-soviet-actual-chrome.png",
+      "title": "KARMA REBIRTH — Wave 25 Architectural 3D + Performance",
+      "msaa": {
+        "requestedMSAA": false,
+        "actualMSAA": false
+      },
+      "shadow": {
+        "resolution": 512,
+        "pcfTaps": 4,
+        "updateEvery": 4,
+        "gpuTiming": "pending"
+      },
+      "rig": {
+        "state": "loaded",
+        "germanSource": "Britdawgmasterfunk CC0 original + ChatGPT-authored 3D field kit",
+        "sovietSource": "Original Soviet-style modeled SSh helmet / canvas haversack / bedroll / pouches over authorized CC0 artist rig (not independent scanned Soviet soldier)",
+        "artistBots": 4,
+        "german": 3,
+        "soviet": 1,
+        "fallback": 0,
+        "showcase": true,
+        "visible": 4,
+        "playerSource": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget",
+        "sovietInterim": {
+          "triangles": 12189,
+          "bytes": 1948888,
+          "source": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget"
+        },
+        "germanLOD": {
+          "triangles": 15991,
+          "bytes": 4884988,
+          "source": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget"
+        }
+      },
+      "perf": {
+        "quality": "fast",
+        "autoLod": 0,
+        "fullBytes": 43578032,
+        "lodBytes": 11607272,
+        "source": "author's licensed CC0 Panzergrenadier",
+        "frames": 49,
+        "actorRenderMs": 0.3999999761581421,
+        "realBots": 4,
+        "renderScale": 0.68,
+        "shadowCpuMs": 0.1,
+        "vfxCpuMs": 0,
+        "loadMs": 1960.6000000238419,
+        "decodeMs": 167.79999995231628,
+        "downloadedBytes": 11607272,
+        "fps": 18.88,
+        "frameP95Ms": 70,
+        "sceneMs": 2.07,
+        "aiMs": 0.24
+      },
+      "draw": {
+        "drawCalls": 47,
+        "triangles": 78100,
+        "shadowDrawCalls": 9,
+        "shadowTriangles": 6658,
+        "actorDrawCalls": 36,
+        "actorTriangles": 68144,
+        "frames": 49,
+        "gpuTimerSupported": true,
+        "gpuMs": null,
+        "gpuMemoryBytes": null,
+        "gpuMemorySource": "WebGL does not report GPU memory use"
+      },
+      "error": null
+    },
+    {
+      "map": {
+        "map": "castle",
+        "staticTriangles": 3184,
+        "architecture": {
+          "roundTower": 4,
+          "gableRoof": 1,
+          "archedPortal": 4,
+          "buttress": 6
+        },
+        "decorativeOnly": true
+      },
+      "team": "german",
+      "path": "docs/screenshots/wave25-castle-german-actual-chrome.png",
+      "title": "KARMA REBIRTH — Wave 25 Architectural 3D + Performance",
+      "msaa": {
+        "requestedMSAA": false,
+        "actualMSAA": false
+      },
+      "shadow": {
+        "resolution": 512,
+        "pcfTaps": 4,
+        "updateEvery": 4,
+        "gpuTiming": "pending"
+      },
+      "rig": {
+        "state": "loaded",
+        "germanSource": "Britdawgmasterfunk CC0 original + ChatGPT-authored 3D field kit",
+        "sovietSource": "Original Soviet-style modeled SSh helmet / canvas haversack / bedroll / pouches over authorized CC0 artist rig (not independent scanned Soviet soldier)",
+        "artistBots": 7,
+        "german": 3,
+        "soviet": 4,
+        "fallback": 0,
+        "showcase": true,
+        "visible": 7,
+        "playerSource": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget",
+        "sovietInterim": {
+          "triangles": 12189,
+          "bytes": 1948888,
+          "source": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget"
+        },
+        "germanLOD": {
+          "triangles": 15991,
+          "bytes": 4884988,
+          "source": "Britdawgmasterfunk CC0 WW2 Panzergrenadier 64-joint Mixamo with UAL1 basis retarget"
+        }
+      },
+      "perf": {
+        "quality": "fast",
+        "autoLod": 0,
+        "fullBytes": 43578032,
+        "lodBytes": 11607272,
+        "source": "author's licensed CC0 Panzergrenadier",
+        "frames": 46,
+        "actorRenderMs": 0.8999999761581421,
+        "realBots": 7,
+        "renderScale": 0.68,
+        "shadowCpuMs": 0,
+        "vfxCpuMs": 0,
+        "loadMs": 1757.7000000476837,
+        "decodeMs": 118.10000002384186,
+        "downloadedBytes": 11607272,
+        "fps": 19.59,
+        "frameP95Ms": 70,
+        "sceneMs": 2.14,
+        "aiMs": 0.2
+      },
+      "draw": {
+        "drawCalls": 55,
+        "triangles": 104392,
+        "shadowDrawCalls": 0,
+        "shadowTriangles": 0,
+        "actorDrawCalls": 53,
+        "actorTriangles": 101094,
+        "frames": 46,
+        "gpuTimerSupported": true,
+        "gpuMs": null,
+        "gpuMemoryBytes": null,
+        "gpuMemorySource": "WebGL does not report GPU memory use"
+      },
+      "error": null
+    }
+  ]
+}

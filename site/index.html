@@ -1,1 +1,40 @@
-<!doctype html><html lang="ko"><meta charset="utf-8"><title>KARMA REBIRTH Wave24</title><meta http-equiv="refresh" content="0;url=./three-d/index.html"><a href="./three-d/index.html">KARMA REBIRTH Wave24 게임 실행</a></html>
+<!doctype html>
+<html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KARMA REBIRTH · 3D Combat</title><link rel="stylesheet" href="style.css">
+<script id="karma-primary-route">
+// The primary entrypoint must open the current WebGL2 game, not Wave01's
+// legacy canvas renderer. ?legacy=1 intentionally preserves the old demo.
+(() => {
+  if (new URLSearchParams(location.search).get("legacy") === "1") return;
+  if (location.protocol === "file:") {
+    // Browsers cannot reliably fetch the large skinned GLBs over file://.
+    // Do not silently display old box-like geometry as the new 3D game.
+    addEventListener("DOMContentLoaded", () => {
+      const panel = document.querySelector(".overlay .menu");
+      if (panel) panel.innerHTML = '<h1>KARMA REBIRTH — 3D 실행 안내</h1><p class="desc">실제 3D 병사·무기 에셋은 로컬 웹 서버에서 로딩됩니다.</p><p class="desc">Windows: 압축 해제 후 <b>PLAY_WINDOWS.bat</b>을 실행하세요.<br>Mac/Linux: 프로젝트 폴더에서 로컬 HTTP 서버를 시작한 뒤 접속하세요.</p><p><a href="three-d/index.html">3D 파일 직접 열기 (군인 GLB 로딩 제한)</a></p>';
+    }, {once:true});
+    return;
+  }
+  const game = new URL("three-d/index.html", location.href);
+  game.search = location.search;
+  game.hash = location.hash;
+  location.replace(game.href);
+})();
+</script></head>
+<body><main id="app" aria-label="오프라인 FPS 게임">
+<canvas id="scene" width="960" height="540" aria-label="3D 전투 게임 화면"></canvas>
+<div id="status" aria-live="polite" class="sr-only">시작 화면</div>
+<div id="overlay" class="overlay"><section class="menu" role="dialog" aria-modal="true" aria-labelledby="heading">
+<p class="eyebrow">PROJECT 2002 / OFFLINE RECONSTRUCTION <span class="dot">●</span> 1944 EASTERN FRONT</p>
+<div class="flag">SINGLE-PLAYER COMBAT PROTOTYPE</div>
+<h1 id="heading">KARMA<span class="slash">/</span><span class="accent">REBIRTH</span></h1>
+<div class="rule"></div><p class="desc">카르마 온라인(2002)에 영감을 받은 비공식 팬메이드 재해석.<br>
+과거전 · 폐허가 된 전초기지 · AI 상대 오프라인 교전</p>
+<div class="mission"><span class="mission-tag">MISSION 01</span><strong>OPERATION: IRON DAWN</strong><small>12명 사살 또는 04:00 동안 살아남으십시오</small></div>
+<p style="margin:16px 0 0;font-size:13px;"><a href="three-d/index.html" style="color:#e7c18a;font-weight:700;">▶ WAVE 03 / 실제 3D FACTORY · CASTLE 정찰 맵 열기</a></p>
+<button id="start" type="button">작전 개시 <span>↗</span></button>
+<p class="controls"><b>W A S D</b> 이동&nbsp;&nbsp;·&nbsp;&nbsp;<b>마우스</b> 조준 / 사격&nbsp;&nbsp;·&nbsp;&nbsp;<b>R</b> 재장전<br><b>1 / 2</b> 무기 교체&nbsp;&nbsp;·&nbsp;&nbsp;<b>SHIFT</b> 달리기&nbsp;&nbsp;·&nbsp;&nbsp;<b>ESC</b> 일시정지</p>
+<p class="disclaimer">UNOFFICIAL TRIBUTE · NO ORIGINAL COPYRIGHTED ASSETS · NO ONLINE CONNECTION REQUIRED</p>
+</section></div>
+<div class="corner tl">FIELD TEST / WAVE 01</div><div class="corner tr">LOCAL BUILD · 2026</div>
+</main><script src="sim.js"></script><script src="walls.js"></script><script src="soldiers.js"></script><script src="actors.js"></script><script src="visuals.js"></script><script src="game.js"></script></body></html>
